@@ -205,21 +205,25 @@ def get_directions_info(origin, destination, mode='transit'):
 
 @app.route('/', methods=['GET'])
 def index():
-    """Root endpoint - Welcome message"""
-    return jsonify({
-        'status': 'success',
-        'message': '🌍 AI Travel Guide API - Добро пожаловать!',
-        'version': '1.0.0',
-        'available_endpoints': {
-            'health_check': '/api/health',
-            'search_attractions': '/api/search-attractions',
-            'search_restaurants': '/api/search-restaurants',
-            'get_directions': '/api/get-directions',
-            'generate_itinerary': '/api/generate-itinerary',
-            'city_tips': '/api/city-tips',
-            'geocode': '/api/geocode'
-        }
-    }), 200
+    """Root endpoint - Serve HTML"""
+    try:
+        return send_file('index.html')
+    except FileNotFoundError:
+        # Fallback если index.html не найден
+        return jsonify({
+            'status': 'success',
+            'message': '🌍 AI Travel Guide API - Добро пожаловать!',
+            'version': '1.0.0',
+            'available_endpoints': {
+                'health_check': '/api/health',
+                'search_attractions': '/api/search-attractions',
+                'search_restaurants': '/api/search-restaurants',
+                'get_directions': '/api/get-directions',
+                'generate_itinerary': '/api/generate-itinerary',
+                'city_tips': '/api/city-tips',
+                'geocode': '/api/geocode'
+            }
+        }), 200
 
 
 @app.route('/api/health', methods=['GET'])
