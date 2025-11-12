@@ -26,7 +26,17 @@ if not GOOGLE_API_KEY:
 print("✅ GOOGLE_API_KEY loaded successfully!\n")
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app)
+
+# ✅ ДОБАВЬ ПРАВИЛЬНЫЙ CORS:
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
 
 try:
     gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
