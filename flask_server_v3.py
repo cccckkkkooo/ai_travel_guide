@@ -1,6 +1,12 @@
 import os
 import sys
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify, send_file  # ← ДОБАВИЛ send_file!
+from flask_cors import CORS
+import googlemaps
+import logging
+import requests
+from datetime import datetime
 
 # Загружаем .env файл ПЕРВЫМ ДЕЛОМ
 print("📂 Загружаю конфигурацию из .env...")
@@ -29,15 +35,7 @@ if not GOOGLE_API_KEY:
 
 print("✅ GOOGLE_API_KEY загружен успешно!\n")
 
-# Теперь импортируем остальное
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import googlemaps
-import logging
-import requests
-from datetime import datetime
-
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
 # Initialize Google Maps client
@@ -207,9 +205,9 @@ def get_directions_info(origin, destination, mode='transit'):
 def index():
     """Root endpoint - Serve HTML"""
     try:
-        return send_file('index.html')
+        return send_file('index.html', mimetype='text/html')
     except FileNotFoundError:
-        # Fallback если index.html не найден
+        logger.error("index.html not found, serving fallback")
         return jsonify({
             'status': 'success',
             'message': '🌍 AI Travel Guide API - Добро пожаловать!',
@@ -380,8 +378,7 @@ def search_restaurants():
                 if details:
                     # Map price level
                     price_map = {1: '$', 2: '$$', 3: '$$$', 4: '$$$$'}
-                    price = price_map.get(details['price_level'], 'N/A') if isinstance(details['price_level'],
-                                                                                       int) else 'N/A'
+                    price = price_map.get(details['price_level'], 'N/A') if isinstance(details['price_level'], int) else 'N/A'
 
                     restaurants.append({
                         'place_id': place_id,
@@ -456,8 +453,7 @@ def generate_itinerary():
 
         # Get attractions
         attractions_response = search_attractions()
-        attractions_data = attractions_response[0].get_json() if isinstance(attractions_response,
-                                                                            tuple) else attractions_response.get_json()
+        attractions_data = attractions_response[0].get_json() if isinstance(attractions_response, tuple) else attractions_response.get_json()
 
         if 'error' in attractions_data:
             return jsonify(attractions_data), 404
@@ -466,8 +462,7 @@ def generate_itinerary():
 
         # Get restaurants
         restaurants_response = search_restaurants()
-        restaurants_data = restaurants_response[0].get_json() if isinstance(restaurants_response,
-                                                                            tuple) else restaurants_response.get_json()
+        restaurants_data = restaurants_response[0].get_json() if isinstance(restaurants_response, tuple) else restaurants_response.get_json()
         restaurants = restaurants_data.get('restaurants', [])
 
         # Calculate trip duration
@@ -577,7 +572,5 @@ def server_error(error):
 # ==================== MAIN ====================
 
 if __name__ == '__main__':
-    import os
-
     port = int(os.getenv('PORT', 8080))
     app.run(debug=False, host='0.0.0.0', port=port)
