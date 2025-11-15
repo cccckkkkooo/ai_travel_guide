@@ -803,6 +803,43 @@ def get_activity(current_user_id):
         'message': 'No activity yet'
     }), 200
 
+@app.route('/api/export/db', methods=['GET'])
+@token_required
+@admin_required
+def export_database(current_user_id):
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+
+        # Пользователи
+        c.execute('SELECT id, username, email, is_admin, created_at FROM users')
+        users = [dict(zip(['id','username','email','is_admin','created_at'], row)) for row in c.fetchall()]
+        
+        # Маршруты
+        c.execute('SELECT id, user_id, route_name, city, route_data, created_at FROM saved_routes')
+        routes = []
+        for row in c.fetchall():
+            route = dict(zip(['id','user_id','route_name','city','route_data','created_at'], row))
+            route['route_data'] = json.loads(route['route_data'])
+            routes.append(route)
+        
+        # Избранное
+        c.execute('SELECT id, user_id, place_id, place_name, city, created_at FROM favorites')
+        favorites = [dict(zip(['id','user_id','place_id','place_name','city','created_at'], row)) for row in c.fetchall()]
+        
+        conn.close()
+
+        return jsonify({
+            'users': users,
+            'routes': routes,
+            'favorites': favorites,
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
     app.run(debug=False, host='0.0.0.0', port=port)
