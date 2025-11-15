@@ -6,7 +6,13 @@ from flask_cors import CORS
 import googlemaps
 import logging
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+import sqlite3
+import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import json
+
 
 # Load environment variables
 print("📂 Loading configuration from .env...")
@@ -14,20 +20,32 @@ load_dotenv()
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
+# Проверяем GOOGLE_API_KEY
 if not GOOGLE_API_KEY:
     print("\n" + "=" * 60)
     print("❌ ERROR: GOOGLE_API_KEY not found!")
     print("=" * 60)
     print("\nPlease create a .env file in the root directory")
     print("Content: GOOGLE_API_KEY=your_key_here")
+    print("           SECRET_KEY=your_secret_key_here")
     print("\n" + "=" * 60 + "\n")
     sys.exit(1)
 
-print("✅ GOOGLE_API_KEY loaded successfully!\n")
+print("✅ GOOGLE_API_KEY loaded successfully!")
 
+# Предупреждение о SECRET_KEY
+if SECRET_KEY == 'dev-secret-key-change-in-production-min32chars':
+    print("⚠️  WARNING: Using default SECRET_KEY! Change it in production!")
+else:
+    print("✅ SECRET_KEY loaded successfully!")
+
+print()
+
+# Инициализация Flask
 app = Flask(__name__, static_folder='.', static_url_path='')
+app.config['SECRET_KEY'] = SECRET_KEY
 
-# ✅ ДОБАВЬ ПРАВИЛЬНЫЙ CORS:
+# CORS
 CORS(app, resources={
     r"/api/*": {
         "origins": ["*"],
@@ -48,9 +66,93 @@ except Exception as e:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ==================== DATABASE SETUP ====================
+def init_db():
+    """Initialize SQLite database"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    # Users table
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+
+    # Saved routes table
+    c.execute('''CREATE TABLE IF NOT EXISTS saved_routes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        route_name TEXT NOT NULL,
+        city TEXT NOT NULL,
+        route_data TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
+
+    # Favorites table
+    c.execute('''CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        place_id TEXT NOT NULL,
+        place_name TEXT NOT NULL,
+        city TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
+
+    conn.commit()
+    conn.close()
+    print("✅ Database initialized\n")
+
+init_db()
+
+# ==================== AUTH DECORATORS ====================
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user_id = data['user_id']
+        except:
+            return jsonify({'error': 'Token is invalid'}), 401
+
+        return f(current_user_id, *args, **kwargs)
+
+    return decorated
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(current_user_id, *args, **kwargs):
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('SELECT is_admin FROM users WHERE id = ?', (current_user_id,))
+        result = c.fetchone()
+        conn.close()
+
+        if not result or result[0] != 1:
+            return jsonify({'error': 'Admin privileges required'}), 403
+
+        return f(current_user_id, *args, **kwargs)
+
+    return decorated
 
 # ==================== HELPER FUNCTIONS ====================
-
 def get_place_details(place_id):
     """Get detailed place information"""
     try:
@@ -108,11 +210,9 @@ def get_place_details(place_id):
             }
 
         return None
-
     except Exception as e:
         logger.error(f"Error in get_place_details: {str(e)}")
         return None
-
 
 def text_search_places(query, location=None):
     """Search places using text query"""
@@ -146,11 +246,9 @@ def text_search_places(query, location=None):
                 })
 
         return places
-
     except Exception as e:
         logger.error(f"Error in text_search_places: {str(e)}")
         return []
-
 
 def geocode_address(address):
     """Convert address to coordinates"""
@@ -168,33 +266,460 @@ def geocode_address(address):
         logger.error(f"Error in geocode: {str(e)}")
         return None
 
-
-def get_directions_info(origin, destination, mode='transit'):
-    """Get directions between two places"""
+# ==================== AUTH ENDPOINTS ====================
+@app.route('/api/register', methods=['POST'])
+def register():
+    """Register new user"""
     try:
-        result = gmaps.directions(origin, destination, mode=mode)
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
 
-        if result:
-            route = result[0]
-            leg = route['legs'][0]
+        if not username or not email or not password:
+            return jsonify({'error': 'All fields are required'}), 400
 
-            return {
-                'distance': leg.get('distance', {}).get('text', ''),
-                'duration': leg.get('duration', {}).get('text', ''),
-                'duration_seconds': leg.get('duration', {}).get('value', 0),
-                'start_address': leg.get('start_address', ''),
-                'end_address': leg.get('end_address', '')
-            }
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
-        return None
+        password_hash = generate_password_hash(password)
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+
+        try:
+            c.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+                     (username, email, password_hash))
+            conn.commit()
+            user_id = c.lastrowid
+            conn.close()
+
+            token = jwt.encode({
+                'user_id': user_id,
+                'exp': datetime.utcnow() + timedelta(days=30)
+            }, app.config['SECRET_KEY'], algorithm='HS256')
+
+            return jsonify({
+                'message': 'User registered successfully',
+                'token': token,
+                'user': {
+                    'id': user_id,
+                    'username': username,
+                    'email': email,
+                    'is_admin': 0
+                }
+            }), 201
+        except sqlite3.IntegrityError:
+            conn.close()
+            return jsonify({'error': 'Username or email already exists'}), 400
 
     except Exception as e:
-        logger.error(f"Error in get_directions: {str(e)}")
-        return None
+        logger.error(f"Register error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/api/login', methods=['POST'])
+def login():
+    """Login user"""
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
 
-# ==================== API ENDPOINTS ====================
+        if not username or not password:
+            return jsonify({'error': 'Username and password required'}), 400
 
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('SELECT id, username, email, password_hash, is_admin FROM users WHERE username = ?', (username,))
+        user = c.fetchone()
+        conn.close()
+
+        if not user or not check_password_hash(user[3], password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+
+        token = jwt.encode({
+            'user_id': user[0],
+            'exp': datetime.utcnow() + timedelta(days=30)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({
+            'message': 'Login successful',
+            'token': token,
+            'user': {
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'is_admin': user[4]
+            }
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/profile', methods=['GET'])
+@token_required
+def get_profile(current_user_id):
+    """Get user profile"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('SELECT id, username, email, is_admin, created_at FROM users WHERE id = ?', (current_user_id,))
+        user = c.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+
+        # Get saved routes count
+        c.execute('SELECT COUNT(*) FROM saved_routes WHERE user_id = ?', (current_user_id,))
+        routes_count = c.fetchone()[0]
+
+        # Get favorites count
+        c.execute('SELECT COUNT(*) FROM favorites WHERE user_id = ?', (current_user_id,))
+        favorites_count = c.fetchone()[0]
+
+        conn.close()
+
+        return jsonify({
+            'user': {
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'is_admin': user[3],
+                'created_at': user[4],
+                'routes_count': routes_count,
+                'favorites_count': favorites_count
+            }
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Profile error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== SAVED ROUTES ENDPOINTS ====================
+@app.route('/api/routes', methods=['GET'])
+@token_required
+def get_saved_routes(current_user_id):
+    """Get user's saved routes"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, route_name, city, route_data, created_at 
+                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''',
+                  (current_user_id,))
+        routes = c.fetchall()
+        conn.close()
+
+        routes_list = []
+        for route in routes:
+            routes_list.append({
+                'id': route[0],
+                'route_name': route[1],
+                'city': route[2],
+                'route_data': json.loads(route[3]),
+                'created_at': route[4]
+            })
+
+        return jsonify({'routes': routes_list}), 200
+
+    except Exception as e:
+        logger.error(f"Get routes error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/routes', methods=['POST'])
+@token_required
+def save_route(current_user_id):
+    """Save a new route"""
+    try:
+        data = request.json
+        route_name = data.get('route_name')
+        city = data.get('city')
+        route_data = data.get('route_data')
+
+        if not route_name or not city or not route_data:
+            return jsonify({'error': 'All fields are required'}), 400
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO saved_routes (user_id, route_name, city, route_data) 
+                     VALUES (?, ?, ?, ?)''',
+                  (current_user_id, route_name, city, json.dumps(route_data)))
+        conn.commit()
+        route_id = c.lastrowid
+        conn.close()
+
+        return jsonify({
+            'message': 'Route saved successfully',
+            'route_id': route_id
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Save route error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/routes/<int:route_id>', methods=['DELETE'])
+@token_required
+def delete_route(current_user_id, route_id):
+    """Delete a saved route"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('DELETE FROM saved_routes WHERE id = ? AND user_id = ?', (route_id, current_user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Route deleted successfully'}), 200
+
+    except Exception as e:
+        logger.error(f"Delete route error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== FAVORITES ENDPOINTS ====================
+@app.route('/api/favorites', methods=['GET'])
+@token_required
+def get_favorites(current_user_id):
+    """Get user's favorite places"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, place_id, place_name, city, created_at 
+                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''',
+                  (current_user_id,))
+        favorites = c.fetchall()
+        conn.close()
+
+        favorites_list = []
+        for fav in favorites:
+            favorites_list.append({
+                'id': fav[0],
+                'place_id': fav[1],
+                'place_name': fav[2],
+                'city': fav[3],
+                'created_at': fav[4]
+            })
+
+        return jsonify({'favorites': favorites_list}), 200
+
+    except Exception as e:
+        logger.error(f"Get favorites error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/favorites', methods=['POST'])
+@token_required
+def add_favorite(current_user_id):
+    """Add place to favorites"""
+    try:
+        data = request.json
+        place_id = data.get('place_id')
+        place_name = data.get('place_name')
+        city = data.get('city')
+
+        if not place_id or not place_name or not city:
+            return jsonify({'error': 'All fields are required'}), 400
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO favorites (user_id, place_id, place_name, city) 
+                     VALUES (?, ?, ?, ?)''',
+                  (current_user_id, place_id, place_name, city))
+        conn.commit()
+        fav_id = c.lastrowid
+        conn.close()
+
+        return jsonify({
+            'message': 'Added to favorites',
+            'favorite_id': fav_id
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Add favorite error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/favorites/<int:fav_id>', methods=['DELETE'])
+@token_required
+def delete_favorite(current_user_id, fav_id):
+    """Remove from favorites"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('DELETE FROM favorites WHERE id = ? AND user_id = ?', (fav_id, current_user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Removed from favorites'}), 200
+
+    except Exception as e:
+        logger.error(f"Delete favorite error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== ADMIN ENDPOINTS ====================
+@app.route('/api/admin/stats', methods=['GET'])
+@token_required
+@admin_required
+def get_admin_stats(current_user_id):
+    """Get admin dashboard statistics"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('SELECT COUNT(*) FROM users')
+        total_users = c.fetchone()[0]
+
+        c.execute('SELECT COUNT(*) FROM saved_routes')
+        total_routes = c.fetchone()[0]
+
+        c.execute('SELECT COUNT(*) FROM favorites')
+        total_favorites = c.fetchone()[0]
+
+        c.execute('SELECT COUNT(*) FROM users WHERE is_admin = 1')
+        admin_count = c.fetchone()[0]
+
+        conn.close()
+
+        return jsonify({
+            'total_users': total_users,
+            'total_routes': total_routes,
+            'total_favorites': total_favorites,
+            'admin_count': admin_count
+        }), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users', methods=['GET'])
+@token_required
+@admin_required
+def get_all_users(current_user_id):
+    """Get all users with their statistics"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('''
+            SELECT u.id, u.username, u.email, u.created_at, u.is_admin, 
+                   COUNT(sr.id) as route_count
+            FROM users u
+            LEFT JOIN saved_routes sr ON u.id = sr.user_id
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        ''')
+
+        users = c.fetchall()
+        conn.close()
+
+        users_list = []
+        for user in users:
+            users_list.append({
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'created_at': user[3],
+                'is_admin': user[4],
+                'route_count': user[5]
+            })
+
+        return jsonify({'users': users_list}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>/promote', methods=['POST'])
+@token_required
+@admin_required
+def promote_user(current_user_id, user_id):
+    """Promote user to admin"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'User promoted to admin'}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>/demote', methods=['POST'])
+@token_required
+@admin_required
+def demote_user(current_user_id, user_id):
+    """Demote user from admin"""
+    if user_id == current_user_id:
+        return jsonify({'error': 'Cannot demote yourself'}), 400
+
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('UPDATE users SET is_admin = 0 WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'User demoted'}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@token_required
+@admin_required
+def delete_user_admin(current_user_id, user_id):
+    """Delete a user and their data"""
+    if user_id == current_user_id:
+        return jsonify({'error': 'Cannot delete yourself'}), 400
+
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('DELETE FROM saved_routes WHERE user_id = ?', (user_id,))
+        c.execute('DELETE FROM favorites WHERE user_id = ?', (user_id,))
+        c.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'User deleted successfully'}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/activity', methods=['GET'])
+@token_required
+@admin_required
+def get_activity(current_user_id):
+    """Get recent user activity"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('''
+            SELECT u.username, 'route_created' as action, 
+                   'Created route: ' || sr.route_name || ' in ' || sr.city as description,
+                   sr.created_at
+            FROM saved_routes sr
+            JOIN users u ON sr.user_id = u.id
+            ORDER BY sr.created_at DESC
+            LIMIT 20
+        ''')
+
+        activities = c.fetchall()
+        conn.close()
+
+        activity_list = []
+        for activity in activities:
+            activity_list.append({
+                'username': activity[0],
+                'action': activity[1],
+                'description': activity[2],
+                'created_at': activity[3]
+            })
+
+        return jsonify({'activity': activity_list}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+# ==================== TRAVEL API ENDPOINTS ====================
 @app.route('/', methods=['GET'])
 def index():
     """Serve HTML"""
@@ -204,19 +729,9 @@ def index():
         logger.error("index.html not found")
         return jsonify({
             'status': 'success',
-            'message': '🌍 AI Travel Guide API',
-            'version': '1.0.0',
-            'available_endpoints': {
-                'health': '/api/health',
-                'search_attractions': '/api/search-attractions',
-                'search_restaurants': '/api/search-restaurants',
-                'get_directions': '/api/get-directions',
-                'generate_itinerary': '/api/generate-itinerary',
-                'city_tips': '/api/city-tips',
-                'geocode': '/api/geocode'
-            }
+            'message': '🌍 AI Travel Guide API v2.0',
+            'version': '2.0.0',
         }), 200
-
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -228,210 +743,20 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     }), 200
 
-
-@app.route('/api/geocode', methods=['POST'])
-def geocode_endpoint():
-    """Convert city/address to coordinates"""
-    try:
-        data = request.json
-        address = data.get('address')
-
-        if not address:
-            return jsonify({'error': 'Address is required'}), 400
-
-        result = geocode_address(address)
-
-        if result:
-            return jsonify(result), 200
-        else:
-            return jsonify({'error': 'Could not geocode address'}), 404
-
-    except Exception as e:
-        logger.error(f"Geocode error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/search-attractions', methods=['POST'])
-def search_attractions():
-    """Search for tourist attractions"""
-    try:
-        data = request.json
-        city = data.get('city')
-
-        if not city:
-            return jsonify({'error': 'City is required'}), 400
-
-        geocode_result = geocode_address(city)
-        if not geocode_result:
-            return jsonify({'error': f'Could not find city: {city}'}), 404
-
-        location = f"{geocode_result['lat']},{geocode_result['lng']}"
-
-        attractions = []
-        search_queries = [
-            f'tourist attractions in {city}',
-            f'museums in {city}',
-            f'historical sites in {city}',
-            f'landmarks in {city}',
-        ]
-
-        seen_place_ids = set()
-
-        for query in search_queries[:3]:
-            places = text_search_places(query, location)
-
-            for place in places:
-                place_id = place['place_id']
-
-                if place_id in seen_place_ids:
-                    continue
-
-                seen_place_ids.add(place_id)
-
-                details = get_place_details(place_id)
-
-                if details:
-                    attractions.append({
-                        'place_id': place_id,
-                        'name': details['name'],
-                        'category': 'Sightseeing',
-                        'description': f"Popular attraction with {details['user_ratings_total']} reviews",
-                        'location': details['formatted_address'],
-                        'address': details['formatted_address'],
-                        'rating': details['rating'],
-                        'phone': details['phone'],
-                        'website': details['website'],
-                        'opening_hours': details['opening_hours'],
-                        'photos': details['photos'],
-                        'reviews': details['reviews'],
-                        'duration': '2h',
-                        'lat': details['location']['lat'],
-                        'lng': details['location']['lng']
-                    })
-
-                if len(attractions) >= 12:
-                    break
-
-            if len(attractions) >= 12:
-                break
-
-        logger.info(f"Found {len(attractions)} attractions for {city}")
-        return jsonify({'attractions': attractions}), 200
-
-    except Exception as e:
-        logger.error(f"Search attractions error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/search-restaurants', methods=['POST'])
-def search_restaurants():
-    """Search for restaurants"""
-    try:
-        data = request.json
-        city = data.get('city')
-
-        if not city:
-            return jsonify({'error': 'City is required'}), 400
-
-        geocode_result = geocode_address(city)
-        if not geocode_result:
-            return jsonify({'error': f'Could not find city: {city}'}), 404
-
-        location = f"{geocode_result['lat']},{geocode_result['lng']}"
-
-        search_queries = [
-            f'best restaurants in {city}',
-            f'top rated restaurants in {city}'
-        ]
-
-        restaurants = []
-        seen_place_ids = set()
-
-        for query in search_queries:
-            places = text_search_places(query, location)
-
-            for place in places:
-                place_id = place['place_id']
-
-                if place_id in seen_place_ids:
-                    continue
-
-                seen_place_ids.add(place_id)
-
-                details = get_place_details(place_id)
-
-                if details:
-                    price_map = {1: '$', 2: '$$', 3: '$$$', 4: '$$$$'}
-                    price = price_map.get(details['price_level'], 'N/A') if isinstance(details['price_level'], int) else 'N/A'
-
-                    restaurants.append({
-                        'place_id': place_id,
-                        'name': details['name'],
-                        'cuisine': 'Restaurant',
-                        'location': details['formatted_address'],
-                        'address': details['formatted_address'],
-                        'price': price,
-                        'rating': details['rating'],
-                        'phone': details['phone'],
-                        'website': details['website'],
-                        'opening_hours': details['opening_hours'],
-                        'photos': details['photos'],
-                        'reviews': details['reviews'],
-                        'lat': details['location']['lat'],
-                        'lng': details['location']['lng']
-                    })
-
-                if len(restaurants) >= 8:
-                    break
-
-            if len(restaurants) >= 8:
-                break
-
-        logger.info(f"Found {len(restaurants)} restaurants for {city}")
-        return jsonify({'restaurants': restaurants}), 200
-
-    except Exception as e:
-        logger.error(f"Search restaurants error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/get-directions', methods=['POST'])
-def get_directions():
-    """Get directions between two locations"""
-    try:
-        data = request.json
-        origin = data.get('origin')
-        destination = data.get('destination')
-        mode = data.get('mode', 'transit')
-
-        if not origin or not destination:
-            return jsonify({'error': 'Origin and destination required'}), 400
-
-        directions = get_directions_info(origin, destination, mode)
-
-        if directions:
-            return jsonify(directions), 200
-        else:
-            return jsonify({'error': 'Could not get directions'}), 404
-
-    except Exception as e:
-        logger.error(f"Directions error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
 @app.route('/api/generate-itinerary', methods=['POST'])
 def generate_itinerary():
-    """Generate full travel itinerary"""
+    """Generate full travel itinerary with category-based sections"""
     try:
         data = request.json
         city = data.get('city')
         start_date = data.get('start_date')
         end_date = data.get('end_date')
+        interests = data.get('interests', [])
 
         if not city:
             return jsonify({'error': 'City is required'}), 400
 
-        logger.info(f"Generating itinerary for {city}")
+        logger.info(f"Generating itinerary for {city} with interests: {interests}")
 
         geocode_result = geocode_address(city)
         if not geocode_result:
@@ -439,27 +764,59 @@ def generate_itinerary():
 
         location = f"{geocode_result['lat']},{geocode_result['lng']}"
 
-        # Get attractions
-        attractions = []
-        search_queries = [
-            f'tourist attractions in {city}',
-            f'museums in {city}',
-            f'historical sites in {city}',
-        ]
+        # Map interests to search queries
+        category_mapping = {
+            'history': ['historical sites', 'museums', 'monuments'],
+            'nature': ['parks', 'gardens', 'nature reserves'],
+            'food': ['restaurants', 'cafes', 'food markets'],
+            'shopping': ['shopping malls', 'markets', 'boutiques'],
+            'nightlife': ['bars', 'clubs', 'nightlife'],
+            'culture': ['cultural sites', 'theaters', 'art galleries'],
+            'adventure': ['adventure activities', 'outdoor activities']
+        }
+
+        # Build search queries based on selected interests
+        all_attractions = []
         seen_place_ids = set()
 
-        for query in search_queries[:2]:
+        # Always add general tourist attractions
+        base_queries = [f'tourist attractions in {city}', f'things to do in {city}']
+
+        # Add category-specific queries
+        for interest in interests:
+            interest_lower = interest.lower()
+            if interest_lower in category_mapping:
+                for query_type in category_mapping[interest_lower]:
+                    base_queries.append(f'{query_type} in {city}')
+
+        # Search places
+        for query in base_queries[:5]:
             places = text_search_places(query, location)
             for place in places:
                 place_id = place['place_id']
                 if place_id in seen_place_ids:
                     continue
                 seen_place_ids.add(place_id)
+
                 details = get_place_details(place_id)
                 if details:
-                    attractions.append({
+                    category = 'Sightseeing'
+                    types = details.get('types', [])
+
+                    if any(t in types for t in ['museum', 'art_gallery']):
+                        category = 'History'
+                    elif any(t in types for t in ['park', 'natural_feature']):
+                        category = 'Nature'
+                    elif any(t in types for t in ['restaurant', 'cafe', 'food']):
+                        category = 'Food'
+                    elif any(t in types for t in ['shopping_mall', 'store']):
+                        category = 'Shopping'
+                    elif any(t in types for t in ['night_club', 'bar']):
+                        category = 'Nightlife'
+
+                    all_attractions.append({
                         'name': details['name'],
-                        'category': 'Sightseeing',
+                        'category': category,
                         'description': f"Popular attraction with {details['user_ratings_total']} reviews",
                         'address': details['formatted_address'],
                         'rating': details['rating'],
@@ -469,31 +826,33 @@ def generate_itinerary():
                         'photos': details['photos'],
                         'reviews': details['reviews'],
                         'duration': '2h',
+                        'place_id': place_id
                     })
-                if len(attractions) >= 10:
-                    break
-            if len(attractions) >= 10:
+
+                    if len(all_attractions) >= 15:
+                        break
+
+            if len(all_attractions) >= 15:
                 break
 
-        # Get restaurants
+        # Get restaurants separately
         restaurants = []
-        search_queries_rest = [
-            f'best restaurants in {city}',
-            f'top rated restaurants in {city}'
-        ]
-        seen_place_ids = set()
+        seen_rest_ids = set()
+        rest_queries = [f'best restaurants in {city}', f'top rated restaurants in {city}']
 
-        for query in search_queries_rest:
+        for query in rest_queries:
             places = text_search_places(query, location)
             for place in places:
                 place_id = place['place_id']
-                if place_id in seen_place_ids:
+                if place_id in seen_rest_ids:
                     continue
-                seen_place_ids.add(place_id)
+                seen_rest_ids.add(place_id)
+
                 details = get_place_details(place_id)
                 if details:
                     price_map = {1: '$', 2: '$$', 3: '$$$', 4: '$$$$'}
                     price = price_map.get(details['price_level'], 'N/A') if isinstance(details['price_level'], int) else 'N/A'
+
                     restaurants.append({
                         'name': details['name'],
                         'address': details['formatted_address'],
@@ -504,10 +863,13 @@ def generate_itinerary():
                         'opening_hours': details['opening_hours'],
                         'photos': details['photos'],
                         'reviews': details['reviews'],
+                        'place_id': place_id
                     })
-                if len(restaurants) >= 6:
-                    break
-            if len(restaurants) >= 6:
+
+                    if len(restaurants) >= 8:
+                        break
+
+            if len(restaurants) >= 8:
                 break
 
         # Calculate duration
@@ -519,19 +881,17 @@ def generate_itinerary():
             duration = 3
 
         # Build itinerary
-        activities_per_day = max(2, len(attractions) // duration) if duration > 0 else 2
+        activities_per_day = max(2, len(all_attractions) // duration) if duration > 0 else 2
         restaurants_per_day = max(1, len(restaurants) // duration) if duration > 0 else 1
 
         itinerary = []
-
         for day in range(1, duration + 1):
             day_start = (day - 1) * activities_per_day
-            day_end = min(day * activities_per_day, len(attractions))
-
+            day_end = min(day * activities_per_day, len(all_attractions))
             rest_start = (day - 1) * restaurants_per_day
             rest_end = min(day * restaurants_per_day, len(restaurants))
 
-            day_activities = attractions[day_start:day_end]
+            day_activities = all_attractions[day_start:day_end]
             day_restaurants = restaurants[rest_start:rest_end]
 
             itinerary.append({
@@ -541,32 +901,7 @@ def generate_itinerary():
                 'restaurants': day_restaurants
             })
 
-        result = {
-            'city': city,
-            'duration_days': duration,
-            'total_attractions': len(attractions),
-            'total_restaurants': len(restaurants),
-            'itinerary': itinerary
-        }
-
-        logger.info(f"Generated itinerary: {duration} days, {len(attractions)} attractions, {len(restaurants)} restaurants")
-        return jsonify(result), 200
-
-    except Exception as e:
-        logger.error(f"Generate itinerary error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/city-tips', methods=['POST'])
-def city_tips():
-    """Get travel tips for a city"""
-    try:
-        data = request.json
-        city = data.get('city')
-
-        if not city:
-            return jsonify({'error': 'City is required'}), 400
-
+        # Travel tips
         tips = [
             '🌟 Arrive early at popular attractions to avoid crowds',
             '🗺️ Download offline maps before your trip',
@@ -578,22 +913,31 @@ def city_tips():
             '💳 Keep some cash for small vendors'
         ]
 
-        return jsonify({'tips': tips}), 200
+        result = {
+            'city': city,
+            'duration_days': duration,
+            'total_attractions': len(all_attractions),
+            'total_restaurants': len(restaurants),
+            'selected_interests': interests,
+            'itinerary': itinerary,
+            'tips': tips
+        }
+
+        logger.info(f"Generated itinerary: {duration} days, {len(all_attractions)} attractions, {len(restaurants)} restaurants")
+
+        return jsonify(result), 200
 
     except Exception as e:
-        logger.error(f"City tips error: {str(e)}")
+        logger.error(f"Generate itinerary error: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
 
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Endpoint not found'}), 404
 
-
 @app.errorhandler(500)
 def server_error(error):
     return jsonify({'error': 'Internal server error'}), 500
-
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
