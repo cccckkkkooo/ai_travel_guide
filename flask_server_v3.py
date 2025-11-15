@@ -6,12 +6,9 @@ from flask_cors import CORS
 import googlemaps
 import logging
 import requests
-from datetime import datetime, timedelta
-import sqlite3
-import jwt
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-import json
+from datetime import datetime
+import hashlib
+import base64
 
 
 # Load environment variables
@@ -66,49 +63,27 @@ except Exception as e:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ==================== DATABASE SETUP ====================
-def init_db():
-    """Initialize SQLite database"""
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
+# ==================== DATABASE SIMULATION ====================
+# In production, use a real database (SQLite, PostgreSQL, etc.)
 
-    # Users table
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        is_admin INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )''')
+users_db = {}
+routes_db = {}
+favorites_db = {}
 
-    # Saved routes table
-    c.execute('''CREATE TABLE IF NOT EXISTS saved_routes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        route_name TEXT NOT NULL,
-        city TEXT NOT NULL,
-        route_data TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )''')
+def generate_simple_token(user_id):
+    """Generate a simple token (not JWT, just base64 encoded)"""
+    token_data = f"{user_id}:{datetime.now().isoformat()}"
+    return base64.b64encode(token_data.encode()).decode()
 
-    # Favorites table
-    c.execute('''CREATE TABLE IF NOT EXISTS favorites (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        place_id TEXT NOT NULL,
-        place_name TEXT NOT NULL,
-        city TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )''')
+def verify_token(token):
+    """Verify token and extract user_id"""
+    try:
+        token_data = base64.b64decode(token).decode()
+        user_id = token_data.split(':')[0]
+        return user_id
+    except:
+        return None
 
-    conn.commit()
-    conn.close()
-    print("✅ Database initialized\n")
-
-init_db()
 
 # ==================== AUTH DECORATORS ====================
 def token_required(f):
