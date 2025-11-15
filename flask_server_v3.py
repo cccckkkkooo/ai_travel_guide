@@ -422,7 +422,7 @@ def get_saved_routes(current_user_id):
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
         c.execute('''SELECT id, route_name, city, route_data, created_at 
-                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''', 
+                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''',
                   (current_user_id,))
         routes = c.fetchall()
         conn.close()
@@ -500,7 +500,7 @@ def get_favorites(current_user_id):
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
         c.execute('''SELECT id, place_id, place_name, city, created_at 
-                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''', 
+                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''',
                   (current_user_id,))
         favorites = c.fetchall()
         conn.close()
@@ -569,87 +569,193 @@ def delete_favorite(current_user_id, fav_id):
         logger.error(f"Delete favorite error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# ==================== ADMIN ENDPOINTS ====================
-@app.route('/api/admin/users', methods=['GET'])
+
+# ==================== ADMIN ROUTES ENDPOINTS ====================
+
+@app.route('/api/admin/all-routes', methods=['GET'])
 @token_required
 @admin_required
-def get_all_users(current_user_id):
-    """Get all users (admin only)"""
+def get_all_routes(current_user_id):
+    """Get all routes from all users (admin only)"""
     try:
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
-        c.execute('''SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at DESC''')
-        users = c.fetchall()
+
+        # Get all routes with user info
+        c.execute('''
+            SELECT sr.id, sr.user_id, sr.route_name, sr.city, sr.route_data, sr.created_at, u.username, u.email
+            FROM saved_routes sr
+            JOIN users u ON sr.user_id = u.id
+            ORDER BY sr.created_at DESC
+        ''')
+        routes = c.fetchall()
         conn.close()
 
-        users_list = []
-        for user in users:
-            users_list.append({
-                'id': user[0],
-                'username': user[1],
-                'email': user[2],
-                'is_admin': user[3],
-                'created_at': user[4]
+        routes_list = []
+        for route in routes:
+            routes_list.append({
+                'id': route[0],
+                'user_id': route[1],
+                'route_name': route[2],
+                'city': route[3],
+                'route_data': json.loads(route[4]),
+                'created_at': route[5],
+                'username': route[6],
+                'email': route[7]
             })
 
-        return jsonify({'users': users_list}), 200
+        return jsonify({
+            'total_routes': len(routes_list),
+            'routes': routes_list
+        }), 200
 
     except Exception as e:
-        logger.error(f"Get users error: {str(e)}")
+        logger.error(f"Get all routes error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+
+@app.route('/api/admin/user-routes/<int:user_id>', methods=['GET'])
 @token_required
 @admin_required
-def delete_user(current_user_id, user_id):
-    """Delete user (admin only)"""
+def get_user_routes_admin(current_user_id, user_id):
+    """Get all routes of specific user (admin only)"""
     try:
-        if current_user_id == user_id:
-            return jsonify({'error': 'Cannot delete yourself'}), 400
-
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
-        c.execute('DELETE FROM saved_routes WHERE user_id = ?', (user_id,))
-        c.execute('DELETE FROM favorites WHERE user_id = ?', (user_id,))
-        c.execute('DELETE FROM users WHERE id = ?', (user_id,))
+
+        # Get user info
+        c.execute('SELECT username, email FROM users WHERE id = ?', (user_id,))
+        user = c.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+
+        # Get user's routes
+        c.execute('''
+            SELECT id, route_name, city, route_data, created_at
+            FROM saved_routes
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        routes = c.fetchall()
+        conn.close()
+
+        routes_list = []
+        for route in routes:
+            routes_list.append({
+                'id': route[0],
+                'route_name': route[1],
+                'city': route[2],
+                'route_data': json.loads(route[3]),
+                'created_at': route[4]
+            })
+
+        return jsonify({
+            'user': {
+                'id': user_id,
+                'username': user[0],
+                'email': user[1]
+            },
+            'total_routes': len(routes_list),
+            'routes': routes_list
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Get user routes error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/routes/<int:route_id>', methods=['DELETE'])
+@token_required
+@admin_required
+def delete_route_admin(current_user_id, route_id):
+    """Delete any route (admin only)"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('DELETE FROM saved_routes WHERE id = ?', (route_id,))
         conn.commit()
         conn.close()
 
-        return jsonify({'message': 'User deleted successfully'}), 200
+        return jsonify({'message': 'Route deleted successfully'}), 200
 
     except Exception as e:
-        logger.error(f"Delete user error: {str(e)}")
+        logger.error(f"Delete route error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/admin/stats', methods=['GET'])
 @token_required
 @admin_required
 def get_stats(current_user_id):
-    """Get platform statistics (admin only)"""
+    """Get detailed platform statistics (admin only)"""
     try:
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
 
+        # Total users
         c.execute('SELECT COUNT(*) FROM users')
         total_users = c.fetchone()[0]
 
+        # Total admins
+        c.execute('SELECT COUNT(*) FROM users WHERE is_admin = 1')
+        total_admins = c.fetchone()[0]
+
+        # Total routes
         c.execute('SELECT COUNT(*) FROM saved_routes')
         total_routes = c.fetchone()[0]
 
+        # Total favorites
         c.execute('SELECT COUNT(*) FROM favorites')
         total_favorites = c.fetchone()[0]
+
+        # Top users by routes
+        c.execute('''
+            SELECT u.username, COUNT(sr.id) as route_count
+            FROM users u
+            LEFT JOIN saved_routes sr ON u.id = sr.user_id
+            GROUP BY u.id
+            ORDER BY route_count DESC
+            LIMIT 5
+        ''')
+        top_users = []
+        for row in c.fetchall():
+            top_users.append({
+                'username': row[0],
+                'routes_count': row[1]
+            })
+
+        # Cities with most routes
+        c.execute('''
+            SELECT city, COUNT(*) as count
+            FROM saved_routes
+            GROUP BY city
+            ORDER BY count DESC
+            LIMIT 5
+        ''')
+        top_cities = []
+        for row in c.fetchall():
+            top_cities.append({
+                'city': row[0],
+                'routes_count': row[1]
+            })
 
         conn.close()
 
         return jsonify({
             'total_users': total_users,
+            'total_admins': total_admins,
             'total_routes': total_routes,
-            'total_favorites': total_favorites
+            'total_favorites': total_favorites,
+            'top_users': top_users,
+            'top_cities': top_cities
         }), 200
 
     except Exception as e:
         logger.error(f"Get stats error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 # ==================== TRAVEL API ENDPOINTS ====================
 @app.route('/', methods=['GET'])
