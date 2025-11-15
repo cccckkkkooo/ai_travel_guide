@@ -5,415 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Travel Guide</title>
     <style>
-        :root {
-  /* Primitive Color Tokens */
-  --color-white: rgba(255, 255, 255, 1);
-  --color-black: rgba(0, 0, 0, 1);
-  --color-cream-50: rgba(252, 252, 249, 1);
-  --color-cream-100: rgba(255, 255, 253, 1);
-  --color-gray-200: rgba(245, 245, 245, 1);
-  --color-gray-300: rgba(167, 169, 169, 1);
-  --color-gray-400: rgba(119, 124, 124, 1);
-  --color-slate-500: rgba(98, 108, 113, 1);
-  --color-brown-600: rgba(94, 82, 64, 1);
-  --color-charcoal-700: rgba(31, 33, 33, 1);
-  --color-charcoal-800: rgba(38, 40, 40, 1);
-  --color-slate-900: rgba(19, 52, 59, 1);
-  --color-teal-300: rgba(50, 184, 198, 1);
-  --color-teal-400: rgba(45, 166, 178, 1);
-  --color-teal-500: rgba(33, 128, 141, 1);
-  --color-teal-600: rgba(29, 116, 128, 1);
-  --color-teal-700: rgba(26, 104, 115, 1);
-  --color-teal-800: rgba(41, 150, 161, 1);
-  --color-red-400: rgba(255, 84, 89, 1);
-  --color-red-500: rgba(192, 21, 47, 1);
-  --color-orange-400: rgba(230, 129, 97, 1);
-  --color-orange-500: rgba(168, 75, 47, 1);
-
-  /* RGB versions for opacity control */
-  --color-brown-600-rgb: 94, 82, 64;
-  --color-teal-500-rgb: 33, 128, 141;
-  --color-slate-900-rgb: 19, 52, 59;
-  --color-slate-500-rgb: 98, 108, 113;
-  --color-red-500-rgb: 192, 21, 47;
-  --color-red-400-rgb: 255, 84, 89;
-  --color-orange-500-rgb: 168, 75, 47;
-  --color-orange-400-rgb: 230, 129, 97;
-
-  /* Background color tokens (Light Mode) */
-  --color-bg-1: rgba(59, 130, 246, 0.08);
-  --color-bg-2: rgba(245, 158, 11, 0.08);
-  --color-bg-3: rgba(34, 197, 94, 0.08);
-  --color-bg-4: rgba(239, 68, 68, 0.08);
-  --color-bg-5: rgba(147, 51, 234, 0.08);
-  --color-bg-6: rgba(249, 115, 22, 0.08);
-  --color-bg-7: rgba(236, 72, 153, 0.08);
-  --color-bg-8: rgba(6, 182, 212, 0.08);
-
-  /* Semantic Color Tokens (Light Mode) */
-  --color-background: var(--color-cream-50);
-  --color-surface: var(--color-cream-100);
-  --color-text: var(--color-slate-900);
-  --color-text-secondary: var(--color-slate-500);
-  --color-primary: var(--color-teal-500);
-  --color-primary-hover: var(--color-teal-600);
-  --color-primary-active: var(--color-teal-700);
-  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
-  --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
-  --color-border: rgba(var(--color-brown-600-rgb), 0.2);
-  --color-btn-primary-text: var(--color-cream-50);
-  --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-error: var(--color-red-500);
-  --color-success: var(--color-teal-500);
-  --color-warning: var(--color-orange-500);
-  --color-info: var(--color-slate-500);
-  --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
-  --color-select-caret: rgba(var(--color-slate-900-rgb), 0.8);
-
-  /* Common style patterns */
-  --focus-ring: 0 0 0 3px var(--color-focus-ring);
-  --focus-outline: 2px solid var(--color-primary);
-  --status-bg-opacity: 0.15;
-  --status-border-opacity: 0.25;
-  --select-caret-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23134252' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  --select-caret-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-
-  /* RGB versions for opacity control */
-  --color-success-rgb: 33, 128, 141;
-  --color-error-rgb: 192, 21, 47;
-  --color-warning-rgb: 168, 75, 47;
-  --color-info-rgb: 98, 108, 113;
-
-  /* Typography */
-  --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-family-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo,
-    Monaco, Consolas, monospace;
-  --font-size-xs: 11px;
-  --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-md: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 18px;
-  --font-size-2xl: 20px;
-  --font-size-3xl: 24px;
-  --font-size-4xl: 30px;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 550;
-  --font-weight-bold: 600;
-  --line-height-tight: 1.2;
-  --line-height-normal: 1.5;
-  --letter-spacing-tight: -0.01em;
-
-  /* Spacing */
-  --space-0: 0;
-  --space-1: 1px;
-  --space-2: 2px;
-  --space-4: 4px;
-  --space-6: 6px;
-  --space-8: 8px;
-  --space-10: 10px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-20: 20px;
-  --space-24: 24px;
-  --space-32: 32px;
-
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-base: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
-    0 2px 4px -1px rgba(0, 0, 0, 0.02);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04),
-    0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.03);
-
-  /* Animation */
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
-
-  /* Layout */
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1280px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-gray-400-rgb: 119, 124, 124;
-    --color-teal-300-rgb: 50, 184, 198;
-    --color-gray-300-rgb: 167, 169, 169;
-    --color-gray-200-rgb: 245, 245, 245;
-
-    --color-bg-1: rgba(29, 78, 216, 0.15);
-    --color-bg-2: rgba(180, 83, 9, 0.15);
-    --color-bg-3: rgba(21, 128, 61, 0.15);
-    --color-bg-4: rgba(185, 28, 28, 0.15);
-    --color-bg-5: rgba(107, 33, 168, 0.15);
-    --color-bg-6: rgba(194, 65, 12, 0.15);
-    --color-bg-7: rgba(190, 24, 93, 0.15);
-    --color-bg-8: rgba(8, 145, 178, 0.15);
-
-    --color-background: var(--color-charcoal-700);
-    --color-surface: var(--color-charcoal-800);
-    --color-text: var(--color-gray-200);
-    --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
-    --color-primary: var(--color-teal-300);
-    --color-primary-hover: var(--color-teal-400);
-    --color-primary-active: var(--color-teal-800);
-    --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
-    --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
-    --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
-    --color-border: rgba(var(--color-gray-400-rgb), 0.3);
-    --color-error: var(--color-red-400);
-    --color-success: var(--color-teal-300);
-    --color-warning: var(--color-orange-400);
-    --color-info: var(--color-gray-300);
-    --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
-    --color-btn-primary-text: var(--color-slate-900);
-    --color-card-border: rgba(var(--color-gray-400-rgb), 0.2);
-    --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
-    --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-    --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
-
-    --color-success-rgb: var(--color-teal-300-rgb);
-    --color-error-rgb: var(--color-red-400-rgb);
-    --color-warning-rgb: var(--color-orange-400-rgb);
-    --color-info-rgb: var(--color-gray-300-rgb);
-  }
-}
-
-[data-color-scheme="dark"] {
-  --color-gray-400-rgb: 119, 124, 124;
-  --color-teal-300-rgb: 50, 184, 198;
-  --color-gray-300-rgb: 167, 169, 169;
-  --color-gray-200-rgb: 245, 245, 245;
-
-  --color-bg-1: rgba(29, 78, 216, 0.15);
-  --color-bg-2: rgba(180, 83, 9, 0.15);
-  --color-bg-3: rgba(21, 128, 61, 0.15);
-  --color-bg-4: rgba(185, 28, 28, 0.15);
-  --color-bg-5: rgba(107, 33, 168, 0.15);
-  --color-bg-6: rgba(194, 65, 12, 0.15);
-  --color-bg-7: rgba(190, 24, 93, 0.15);
-  --color-bg-8: rgba(8, 145, 178, 0.15);
-
-  --color-background: var(--color-charcoal-700);
-  --color-surface: var(--color-charcoal-800);
-  --color-text: var(--color-gray-200);
-  --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
-  --color-primary: var(--color-teal-300);
-  --color-primary-hover: var(--color-teal-400);
-  --color-primary-active: var(--color-teal-800);
-  --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
-  --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
-  --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
-  --color-border: rgba(var(--color-gray-400-rgb), 0.3);
-  --color-error: var(--color-red-400);
-  --color-success: var(--color-teal-300);
-  --color-warning: var(--color-orange-400);
-  --color-info: var(--color-gray-300);
-  --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
-  --color-btn-primary-text: var(--color-slate-900);
-  --color-card-border: rgba(var(--color-gray-400-rgb), 0.15);
-  --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
-  --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-  --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
-
-  --color-success-rgb: var(--color-teal-300-rgb);
-  --color-error-rgb: var(--color-red-400-rgb);
-  --color-warning-rgb: var(--color-orange-400-rgb);
-  --color-info-rgb: var(--color-gray-300-rgb);
-}
-
-[data-color-scheme="light"] {
-  --color-brown-600-rgb: 94, 82, 64;
-  --color-teal-500-rgb: 33, 128, 141;
-  --color-slate-900-rgb: 19, 52, 59;
-
-  --color-background: var(--color-cream-50);
-  --color-surface: var(--color-cream-100);
-  --color-text: var(--color-slate-900);
-  --color-text-secondary: var(--color-slate-500);
-  --color-primary: var(--color-teal-500);
-  --color-primary-hover: var(--color-teal-600);
-  --color-primary-active: var(--color-teal-700);
-  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
-  --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
-  --color-border: rgba(var(--color-brown-600-rgb), 0.2);
-  --color-btn-primary-text: var(--color-cream-50);
-  --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
-  --color-error: var(--color-red-500);
-  --color-success: var(--color-teal-500);
-  --color-warning: var(--color-orange-500);
-  --color-info: var(--color-slate-500);
-  --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
-
-  --color-success-rgb: var(--color-teal-500-rgb);
-  --color-error-rgb: var(--color-red-500-rgb);
-  --color-warning-rgb: var(--color-orange-500-rgb);
-  --color-info-rgb: var(--color-slate-500-rgb);
-}
-
-@font-face {
-  font-family: 'FKGroteskNeue';
-  src: url('https://r2cdn.perplexity.ai/fonts/FKGroteskNeue.woff2')
-    format('woff2');
-}
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+:root {
+    --primary: #6366f1;
+    --secondary: #ec4899;
+    --success: #10b981;
+    --bg: #f8f9fb;
+    --text: #1a202c;
+    --border: #e2e8f0;
+    --card-bg: #ffffff;
+}
+
+[data-color-scheme="dark"] {
+    --bg: #0f172a;
+    --text: #f1f5f9;
+    --border: #334155;
+    --card-bg: #1e293b;
+}
+
+html {
+    transition: background-color 0.3s ease;
+    background-color: var(--bg);
+    color: var(--text);
+}
+
 body {
-    font-family: var(--font-family-base);
-    background-color: var(--color-background);
-    color: var(--color-text);
-    line-height: var(--line-height-normal);
-    transition: background-color 0.3s var(--ease-standard), color 0.3s var(--ease-standard);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
 }
 
-.container {
-    max-width: var(--container-lg);
-    margin: 0 auto;
-    padding: var(--space-24);
-}
-
-/* Header */
 .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-20) var(--space-24);
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-card-border);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    transition: background-color 0.3s var(--ease-standard);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .header-logo {
     display: flex;
     align-items: center;
-    gap: var(--space-12);
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: bold;
 }
 
 .connection-status {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    padding: var(--space-4) var(--space-12);
-    background: var(--color-secondary);
-    border-radius: var(--radius-full);
-    border: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
-.theme-toggle {
-    background: var(--color-secondary);
-    border: 1px solid var(--color-border);
-    padding: var(--space-8) var(--space-16);
-    border-radius: var(--radius-base);
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.theme-toggle, .profile-btn, .logout-btn, .admin-btn {
+    padding: 0.6rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
     cursor: pointer;
-    font-size: var(--font-size-base);
-    color: var(--color-text);
-    transition: all 0.3s var(--ease-standard);
+    font-weight: 500;
+    transition: all 0.3s;
+    font-size: 0.9rem;
 }
 
-.theme-toggle:hover {
-    background: var(--color-secondary-hover);
+.theme-toggle:hover, .profile-btn:hover, .logout-btn:hover, .admin-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
-/* Welcome Screen */
-.welcome-screen {
+.logout-btn, .admin-btn {
+    display: none;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.welcome {
     text-align: center;
-    padding: var(--space-32) var(--space-24);
-    min-height: 70vh;
+    padding: 3rem 1rem;
+    min-height: 60vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    opacity: 1;
-    transition: opacity 0.3s var(--ease-standard);
 }
 
-.welcome-screen.hidden {
+.welcome.hidden {
     display: none;
 }
 
-.welcome-screen h1 {
-    font-size: var(--font-size-4xl);
-    margin-bottom: var(--space-16);
-    color: var(--color-text);
+.welcome h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.welcome-screen p {
-    font-size: var(--font-size-lg);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-32);
-    max-width: 600px;
+.welcome p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+    margin-bottom: 2rem;
 }
 
-.btn-primary {
-    background: var(--color-primary);
-    color: var(--color-btn-primary-text);
-    padding: var(--space-12) var(--space-32);
+.cta-button {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
     border: none;
-    border-radius: var(--radius-base);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s var(--ease-standard);
+    font-weight: 600;
+    transition: all 0.3s;
 }
 
-.btn-primary:hover {
-    background: var(--color-primary-hover);
-    transform: translateY(-2px);
+.cta-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
 }
 
-.btn-secondary {
-    background: var(--color-secondary);
-    color: var(--color-text);
-    padding: var(--space-10) var(--space-24);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    cursor: pointer;
-    transition: all 0.3s var(--ease-standard);
-}
-
-.btn-secondary:hover {
-    background: var(--color-secondary-hover);
-}
-
-/* Form Container */
 .form-container {
     display: none;
-    max-width: 700px;
-    margin: 0 auto;
-    padding: var(--space-32) 0;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-container.active {
@@ -422,902 +165,1615 @@ body {
 
 .progress-bar {
     width: 100%;
-    height: 6px;
-    background: var(--color-secondary);
-    border-radius: var(--radius-full);
-    margin-bottom: var(--space-32);
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 2rem;
     overflow: hidden;
 }
 
-.progress-fill {
+#progressFill {
     height: 100%;
-    background: var(--color-primary);
-    transition: width 0.3s var(--ease-standard);
-    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    width: 0%;
+    transition: width 0.3s;
 }
 
 .form-step {
     display: none;
-    background: var(--color-surface);
-    padding: var(--space-32);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-card-border);
-    box-shadow: var(--shadow-md);
 }
 
 .form-step.active {
     display: block;
-    animation: slideIn 0.3s var(--ease-standard);
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.form-step h2 {
-    font-size: var(--font-size-2xl);
-    margin-bottom: var(--space-8);
-    color: var(--color-text);
-}
-
-.form-step p {
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-24);
 }
 
 .form-group {
-    margin-bottom: var(--space-24);
+    margin-bottom: 1.5rem;
 }
 
 .form-group label {
     display: block;
-    font-weight: var(--font-weight-medium);
-    margin-bottom: var(--space-8);
-    color: var(--color-text);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .form-group input[type="text"],
 .form-group input[type="date"],
+.form-group input[type="email"],
+.form-group input[type="password"],
 .form-group select {
     width: 100%;
-    padding: var(--space-12);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    font-size: var(--font-size-base);
-    background: var(--color-background);
-    color: var(--color-text);
-    transition: border-color 0.3s var(--ease-standard);
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 1rem;
+    background: var(--bg);
+    color: var(--text);
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: var(--focus-ring);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.checkbox-grid {
+.checkbox-group {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-12);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
 }
 
 .checkbox-item {
     display: flex;
     align-items: center;
-    gap: var(--space-8);
-    padding: var(--space-12);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    cursor: pointer;
-    transition: all 0.3s var(--ease-standard);
-    background: var(--color-background);
+    gap: 0.5rem;
 }
 
-.checkbox-item:hover {
-    background: var(--color-secondary);
-    border-color: var(--color-primary);
-}
-
-.checkbox-item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.checkbox-item.selected {
-    background: var(--color-bg-1);
-    border-color: var(--color-primary);
-}
-
-.radio-grid {
-    display: grid;
-    gap: var(--space-12);
-}
-
-.radio-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-    padding: var(--space-16);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    cursor: pointer;
-    transition: all 0.3s var(--ease-standard);
-    background: var(--color-background);
-}
-
-.radio-item:hover {
-    background: var(--color-secondary);
-    border-color: var(--color-primary);
-}
-
-.radio-item input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.radio-item.selected {
-    background: var(--color-bg-1);
-    border-color: var(--color-primary);
+.checkbox-item input {
+    width: auto;
 }
 
 .form-buttons {
     display: flex;
+    gap: 1rem;
     justify-content: space-between;
-    gap: var(--space-16);
-    margin-top: var(--space-32);
+    margin-top: 2rem;
+    flex-wrap: wrap;
 }
 
-/* Results Screen */
-.results-screen {
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-color: transparent;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.results {
     display: none;
-    opacity: 0;
-    padding: var(--space-24) 0;
+    animation: fadeIn 0.3s ease;
 }
 
-.results-screen.active {
+.results.active {
     display: block;
-    animation: fadeIn 0.5s var(--ease-standard) forwards;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .results-header {
     text-align: center;
-    margin-bottom: var(--space-32);
+    margin-bottom: 2rem;
 }
 
-.results-header h1 {
-    font-size: var(--font-size-3xl);
-    margin-bottom: var(--space-8);
+.results-header h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
 }
 
-.results-header p {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-lg);
-}
-
-.view-tabs {
+.results-actions {
     display: flex;
-    gap: var(--space-12);
-    margin-bottom: var(--space-32);
-    border-bottom: 2px solid var(--color-border);
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
 }
 
-.tab {
-    padding: var(--space-12) var(--space-24);
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
-    transition: all 0.3s var(--ease-standard);
-    margin-bottom: -2px;
+.section {
+    background: var(--card-bg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.tab:hover {
-    color: var(--color-primary);
+.section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
 }
 
-.tab.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
+/* ==================== ATTRACTION CARDS ==================== */
+
+.attraction-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-left: 5px solid var(--primary);
 }
 
-.view-content {
-    display: none;
-}
-
-.view-content.active {
-    display: block;
-    animation: fadeIn 0.3s var(--ease-standard);
-}
-
-/* Itinerary Cards */
-.day-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-card-border);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-24);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-
-.day-header {
-    padding: var(--space-20);
-    background: var(--color-bg-1);
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background 0.3s var(--ease-standard);
-}
-
-.day-header:hover {
-    background: var(--color-bg-2);
-}
-
-.day-header h3 {
-    font-size: var(--font-size-xl);
-}
-
-.day-content {
-    padding: var(--space-20);
-}
-
-.day-content.collapsed {
-    display: none;
-}
-
-.activity-card {
-    background: var(--color-background);
-    padding: var(--space-20);
-    border-radius: var(--radius-base);
-    border: 1px solid var(--color-card-border);
-    margin-bottom: var(--space-16);
-    transition: all 0.3s var(--ease-standard);
-    cursor: pointer;
-}
-
-.activity-card:hover {
-    box-shadow: var(--shadow-md);
+.attraction-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
 
-.activity-header {
+.attraction-title {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: var(--space-12);
+    margin-bottom: 1rem;
+    gap: 1rem;
 }
 
-.activity-title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    margin-bottom: var(--space-4);
+.attraction-title h3 {
+    font-size: 1.3rem;
+    margin: 0;
+    flex: 1;
+    font-weight: 600;
 }
 
-.activity-category {
+.attraction-category {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
     display: inline-block;
-    padding: var(--space-4) var(--space-12);
-    background: var(--color-bg-3);
-    border-radius: var(--radius-full);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
 }
 
-.activity-description {
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-12);
-    line-height: 1.6;
+.attraction-description {
+    color: #666;
+    margin: 0.5rem 0 1.5rem 0;
+    line-height: 1.5;
+    font-size: 0.95rem;
 }
 
-.activity-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-16);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-12);
+[data-color-scheme="dark"] .attraction-description {
+    color: #aaa;
 }
 
-.activity-meta-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
+.attraction-info {
+    background: var(--bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
 }
 
-.activity-tips {
-    background: var(--color-bg-4);
-    padding: var(--space-12);
-    border-radius: var(--radius-sm);
-    border-left: 3px solid var(--color-primary);
-    font-size: var(--font-size-sm);
-    color: var(--color-text);
-    margin-top: var(--space-12);
-}
-
-.rating {
-    color: var(--color-warning);
-}
-
-/* Restaurant Cards */
-.restaurant-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-card-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-20);
-    margin-bottom: var(--space-16);
-    transition: all 0.3s var(--ease-standard);
-}
-
-.restaurant-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-
-.restaurant-header {
+.info-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--space-12);
-}
-
-.restaurant-name {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-}
-
-.price-indicator {
-    font-size: var(--font-size-lg);
-    color: var(--color-success);
-    font-weight: var(--font-weight-bold);
-}
-
-.restaurant-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-16);
-    margin-bottom: var(--space-12);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-}
-
-.restaurant-specialties {
-    background: var(--color-bg-5);
-    padding: var(--space-12);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-8);
-}
-
-.restaurant-tip {
-    background: var(--color-bg-6);
-    padding: var(--space-12);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    border-left: 3px solid var(--color-warning);
-}
-
-/* Tips Section */
-.tips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-16);
-}
-
-.tip-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-card-border);
-    border-radius: var(--radius-base);
-    padding: var(--space-16);
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-12);
-    transition: all 0.3s var(--ease-standard);
-}
-
-.tip-card:hover {
-    background: var(--color-bg-7);
-    transform: translateX(4px);
-}
-
-.tip-icon {
-    font-size: var(--font-size-2xl);
-    flex-shrink: 0;
-}
-
-.tip-content {
-    color: var(--color-text);
-    line-height: 1.5;
-}
-
-/* Back button */
-.btn-back {
-    display: inline-flex;
     align-items: center;
-    gap: var(--space-8);
-    margin-bottom: var(--space-24);
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
 }
 
-/* Loading spinner */
-.loading-screen {
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    min-width: 120px;
+    color: var(--text);
+}
+
+.info-value {
+    flex: 1;
+    text-align: right;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+[data-color-scheme="dark"] .info-value {
+    color: #aaa;
+}
+
+.info-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.info-link:hover {
+    text-decoration: underline;
+}
+
+.attraction-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.gallery-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.gallery-image:hover {
+    transform: scale(1.05);
+    border: 2px solid var(--primary);
+}
+
+.attraction-reviews {
+    background: var(--bg);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--success);
+}
+
+.attraction-reviews h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.review-item {
+    background: var(--card-bg);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+}
+
+.review-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.review-rating {
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.review-item p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.review-time {
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+.restaurant-card {
+    border-left-color: var(--secondary);
+}
+
+.loading {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
-    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
     align-items: center;
+    justify-content: center;
     flex-direction: column;
 }
 
-.loading-screen.active {
+.loading.active {
     display: flex;
 }
 
 .spinner {
     width: 50px;
     height: 50px;
-    border: 4px solid var(--color-secondary);
-    border-top-color: var(--color-primary);
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
-.loading-text {
-    color: var(--color-white);
-    margin-top: var(--space-16);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
+.loading p {
+    color: white;
+    font-size: 1.1rem;
 }
 
-/* Error message */
-.error-message {
-    background: var(--color-bg-4);
-    border: 1px solid var(--color-error);
-    border-left: 4px solid var(--color-error);
-    padding: var(--space-16);
-    border-radius: var(--radius-base);
-    margin: var(--space-24) 0;
-    color: var(--color-text);
-}
-
-.error-message h3 {
-    color: var(--color-error);
-    margin-bottom: var(--space-8);
-}
-
-.error-message button {
-    margin-top: var(--space-12);
-}
-
-/* Photo carousel */
-.photo-carousel {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    margin-bottom: var(--space-12);
-    border-radius: var(--radius-base);
-    overflow: hidden;
-    background: var(--color-secondary);
-}
-
-.photo-carousel img {
+.modal-auth {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-}
-
-.carousel-controls {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 var(--space-8);
-}
-
-.carousel-btn {
     background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: var(--font-size-lg);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
+    z-index: 1000;
 }
 
-.carousel-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
+.modal-auth.active {
+    display: flex !important;
 }
 
-/* Reviews section */
-.reviews-section {
-    margin-top: var(--space-16);
-    padding-top: var(--space-16);
-    border-top: 1px solid var(--color-border);
+.modal-content-auth {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.review-item {
-    background: var(--color-secondary);
-    padding: var(--space-12);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-12);
+.close-auth {
+    float: right;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0.7;
 }
 
-.review-header {
+.close-auth:hover {
+    opacity: 1;
+}
+
+.auth-tabs {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--space-8);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
 }
 
-.review-author {
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
+.auth-tab {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    color: #999;
+    transition: all 0.3s;
 }
 
-.review-rating {
-    color: var(--color-warning);
+.auth-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
 }
 
-.review-text {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    line-height: 1.5;
+.auth-form {
+    display: none;
 }
 
-/* Opening hours */
-.opening-hours {
-    background: var(--color-bg-3);
-    padding: var(--space-12);
-    border-radius: var(--radius-sm);
-    margin-top: var(--space-12);
+.auth-form.active {
+    display: block;
 }
 
-.hours-list {
-    list-style: none;
-    font-size: var(--font-size-sm);
+.auth-input {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 1rem;
+    background: var(--bg);
+    color: var(--text);
 }
 
-.hours-list li {
-    padding: var(--space-4) 0;
+.auth-submit {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.auth-submit:hover {
+    opacity: 0.9;
+}
+
+.profile-screen {
+    display: none;
+}
+
+.profile-screen.active {
+    display: block;
+}
+
+.profile-container {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-tabs {
     display: flex;
-    justify-content: space-between;
-}
-
-/* Contact info */
-.contact-info {
-    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
     flex-wrap: wrap;
-    gap: var(--space-16);
-    margin-top: var(--space-12);
 }
 
-.contact-info a {
-    color: var(--color-primary);
-    text-decoration: none;
+.profile-tab {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    color: #999;
+}
+
+.profile-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+}
+
+.profile-content {
+    display: none;
+}
+
+.profile-content.active {
+    display: block;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: var(--bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.route-item {
+    background: var(--bg);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+
+.route-actions {
     display: flex;
-    align-items: center;
-    gap: var(--space-4);
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
-.contact-info a:hover {
-    text-decoration: underline;
+.route-actions button {
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
 }
 
-/* Responsive */
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.favorite-item {
+    background: var(--bg);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.admin-screen {
+    display: none;
+}
+
+.admin-screen.active {
+    display: block;
+}
+
+.admin-container {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.admin-tab {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    color: #999;
+}
+
+.admin-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+}
+
+.admin-content {
+    display: none;
+}
+
+.admin-content.active {
+    display: block;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.admin-table thead {
+    background: var(--bg);
+}
+
+.admin-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+}
+
+.admin-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-table tbody tr:hover {
+    background: var(--bg);
+}
+
 @media (max-width: 768px) {
-    .container {
-        padding: var(--space-16);
+    .header {
+        flex-direction: column;
     }
 
-    .checkbox-grid {
+    .welcome h1 {
+        font-size: 1.8rem;
+    }
+
+    .checkbox-group {
         grid-template-columns: 1fr;
     }
 
-    .view-tabs {
-        overflow-x: auto;
+    .form-buttons {
+        flex-direction: column;
     }
 
-    .tips-grid {
+    .btn {
+        width: 100%;
+    }
+
+    .profile-stats {
         grid-template-columns: 1fr;
     }
 
-    .form-step {
-        padding: var(--space-20);
+    .attraction-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="header-logo">
-            <span>✈️</span>
-            <span>AI Travel Guide</span>
-            <span class="connection-status" id="connectionStatus">🔴 Disconnected</span>
+        <div class="header-left">
+            <div class="header-logo">
+                <span>✈️</span>
+                <span>AI Travel Guide</span>
+            </div>
+            <span class="connection-status" id="connectionStatus">🔴 Login</span>
         </div>
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        <div class="header-right">
+            <button class="admin-btn" id="adminBtn" onclick="showAdmin()" style="display: none;">👑 Admin</button>
+            <button class="profile-btn" id="profileBtn" onclick="showProfile()" style="display: none;">👤 Profile</button>
+            <button class="profile-btn" id="loginBtn" onclick="showLoginModal()">🔐 Login</button>
+            <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">🚪 Logout</button>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Light Mode</button>
+        </div>
     </header>
 
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="spinner"></div>
-        <p class="loading-text" id="loadingText">Fetching real data from Google Places API...</p>
-    </div>
-
     <div class="container">
-        <!-- Welcome Screen -->
-        <div class="welcome-screen" id="welcomeScreen">
-            <h1>Plan Your Perfect Trip</h1>
-            <p>Discover amazing destinations, build personalized itineraries, and explore local insights with your AI-powered travel assistant.</p>
-            <button class="btn-primary" onclick="startPlanning()">Start Planning</button>
+        <div class="welcome" id="welcomeScreen">
+            <h1>Discover Your Next Adventure</h1>
+            <p>Build personalized itineraries with AI-powered recommendations</p>
+            <button class="cta-button" onclick="startPlanning()">✨ Start Planning</button>
         </div>
 
-        <!-- Form Container -->
         <div class="form-container" id="formContainer">
             <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 16.66%"></div>
+                <div id="progressFill"></div>
             </div>
 
-            <!-- Step 1: Destination -->
-            <div class="form-step active" id="step1">
-                <h2>Where do you want to travel?</h2>
-                <p>Enter your dream destination</p>
+            <div id="step1" class="form-step active">
+                <h2>Where do you want to go?</h2>
                 <div class="form-group">
-                    <label for="destination">City Name *</label>
-                    <input type="text" id="destination" placeholder="Enter city name (e.g., Tokyo, Paris, Barcelona)" required>
+                    <label>Destination City *</label>
+                    <input type="text" id="destination" placeholder="e.g., Paris, Tokyo, New York...">
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-secondary" onclick="cancelPlanning()">Cancel</button>
-                    <button class="btn-primary" onclick="nextStep(2)">Next</button>
+                    <button class="btn" onclick="cancelPlanning()">← Start Over</button>
+                    <button class="btn btn-primary" onclick="nextStep(2)">Next →</button>
                 </div>
             </div>
 
-            <!-- Step 2: Dates -->
-            <div class="form-step" id="step2">
+            <div id="step2" class="form-step">
                 <h2>When are you traveling?</h2>
-                <p>Optional: Select your travel dates</p>
                 <div class="form-group">
-                    <label for="checkIn">Check-in Date</label>
+                    <label>Check-in (Optional)</label>
                     <input type="date" id="checkIn">
                 </div>
                 <div class="form-group">
-                    <label for="checkOut">Check-out Date</label>
+                    <label>Check-out (Optional)</label>
                     <input type="date" id="checkOut">
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-secondary" onclick="prevStep(1)">Previous</button>
-                    <button class="btn-primary" onclick="nextStep(3)">Next</button>
+                    <button class="btn" onclick="prevStep(1)">← Back</button>
+                    <button class="btn btn-primary" onclick="nextStep(3)">Next →</button>
                 </div>
             </div>
 
-            <!-- Step 3: Interests -->
-            <div class="form-step" id="step3">
+            <div id="step3" class="form-step">
                 <h2>What interests you?</h2>
-                <p>Select all that apply</p>
-                <div class="checkbox-grid">
+                <div class="checkbox-group">
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="history">
-                        <span>📚 History</span>
+                        <input type="checkbox" name="interests" value="history"> 📚 History
                     </label>
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="nature">
-                        <span>🌿 Nature</span>
+                        <input type="checkbox" name="interests" value="nature"> 🌿 Nature
                     </label>
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="food">
-                        <span>🍽️ Food</span>
+                        <input type="checkbox" name="interests" value="food"> 🍽️ Food
                     </label>
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="nightlife">
-                        <span>🌙 Nightlife</span>
+                        <input type="checkbox" name="interests" value="shopping"> 🛍️ Shopping
                     </label>
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="museums">
-                        <span>🎨 Museums</span>
+                        <input type="checkbox" name="interests" value="nightlife"> 🌃 Nightlife
                     </label>
                     <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="shopping">
-                        <span>🛍️ Shopping</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="adventure">
-                        <span>🏔️ Adventure</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="family-friendly">
-                        <span>👨‍👩‍👧‍👦 Family-friendly</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="culture">
-                        <span>🎭 Culture</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="photography">
-                        <span>📸 Photography</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="interests" value="wellness">
-                        <span>🧘 Wellness</span>
+                        <input type="checkbox" name="interests" value="adventure"> 🏔️ Adventure
                     </label>
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-secondary" onclick="prevStep(2)">Previous</button>
-                    <button class="btn-primary" onclick="nextStep(4)">Next</button>
+                    <button class="btn" onclick="prevStep(2)">← Back</button>
+                    <button class="btn btn-primary" onclick="nextStep(4)">Next →</button>
                 </div>
             </div>
 
-            <!-- Step 4: Travel Style -->
-            <div class="form-step" id="step4">
-                <h2>What's your travel style?</h2>
-                <p>Choose one that best describes your preferences</p>
-                <div class="radio-grid">
-                    <label class="radio-item">
-                        <input type="radio" name="travelStyle" value="budget">
-                        <div>
-                            <strong>Budget</strong><br>
-                            <small>Affordable accommodations, street food, free attractions</small>
-                        </div>
+            <div id="step4" class="form-step">
+                <h2>Travel Style</h2>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="radio" name="travelStyle" value="budget"> 💰 Budget
                     </label>
-                    <label class="radio-item">
-                        <input type="radio" name="travelStyle" value="luxury">
-                        <div>
-                            <strong>Luxury</strong><br>
-                            <small>High-end hotels, fine dining, exclusive tours</small>
-                        </div>
+                    <label class="checkbox-item">
+                        <input type="radio" name="travelStyle" value="mid-range"> 💵 Mid-range
                     </label>
-                    <label class="radio-item">
-                        <input type="radio" name="travelStyle" value="adventure">
-                        <div>
-                            <strong>Adventure</strong><br>
-                            <small>Outdoor activities, hiking, unique experiences</small>
-                        </div>
-                    </label>
-                    <label class="radio-item">
-                        <input type="radio" name="travelStyle" value="slow_travel">
-                        <div>
-                            <strong>Slow Travel</strong><br>
-                            <small>Local immersion, longer stays, cultural experiences</small>
-                        </div>
-                    </label>
-                    <label class="radio-item">
-                        <input type="radio" name="travelStyle" value="cultural">
-                        <div>
-                            <strong>Cultural</strong><br>
-                            <small>Museums, historical sites, local traditions</small>
-                        </div>
+                    <label class="checkbox-item">
+                        <input type="radio" name="travelStyle" value="luxury"> 💎 Luxury
                     </label>
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-secondary" onclick="prevStep(3)">Previous</button>
-                    <button class="btn-primary" onclick="nextStep(5)">Next</button>
+                    <button class="btn" onclick="prevStep(3)">← Back</button>
+                    <button class="btn btn-primary" onclick="nextStep(5)">Next →</button>
                 </div>
             </div>
 
-            <!-- Step 5: Group Type -->
-            <div class="form-step" id="step5">
-                <h2>Who's traveling?</h2>
-                <p>Select your group type</p>
-                <div class="radio-grid">
-                    <label class="radio-item">
-                        <input type="radio" name="groupType" value="solo">
-                        <div><strong>Solo</strong></div>
+            <div id="step5" class="form-step">
+                <h2>Group Type</h2>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="radio" name="groupType" value="solo"> Solo Traveler
                     </label>
-                    <label class="radio-item">
-                        <input type="radio" name="groupType" value="couple">
-                        <div><strong>Couple</strong></div>
+                    <label class="checkbox-item">
+                        <input type="radio" name="groupType" value="couple"> Couple
                     </label>
-                    <label class="radio-item">
-                        <input type="radio" name="groupType" value="family">
-                        <div><strong>Family</strong></div>
+                    <label class="checkbox-item">
+                        <input type="radio" name="groupType" value="family"> Family
                     </label>
-                    <label class="radio-item">
-                        <input type="radio" name="groupType" value="friends">
-                        <div><strong>Friends</strong></div>
+                    <label class="checkbox-item">
+                        <input type="radio" name="groupType" value="group"> Group
                     </label>
                 </div>
                 <div class="form-buttons">
-                    <button class="btn-secondary" onclick="prevStep(4)">Previous</button>
-                    <button class="btn-primary" onclick="nextStep(6)">Next</button>
-                </div>
-            </div>
-
-            <!-- Step 6: Accessibility -->
-            <div class="form-step" id="step6">
-                <h2>Any accessibility needs?</h2>
-                <p>Optional: Select all that apply</p>
-                <div class="checkbox-grid">
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="accessibility" value="wheelchair">
-                        <span>♿ Wheelchair-friendly</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="accessibility" value="kids">
-                        <span>👶 Kid-friendly</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" name="accessibility" value="pets">
-                        <span>🐕 Pet-friendly</span>
-                    </label>
-                </div>
-                <div class="form-buttons">
-                    <button class="btn-secondary" onclick="prevStep(5)">Previous</button>
-                    <button class="btn-primary" onclick="generateItinerary()">Generate Itinerary</button>
+                    <button class="btn" onclick="prevStep(4)">← Back</button>
+                    <button class="btn btn-primary" onclick="generateItinerary()">🚀 Generate Itinerary</button>
                 </div>
             </div>
         </div>
 
-        <!-- Results Screen -->
-        <div class="results-screen" id="resultsScreen">
-            <button class="btn-secondary btn-back" onclick="startOver()">← Start Over</button>
-            
+        <div class="results" id="resultsScreen">
             <div class="results-header">
-                <h1 id="resultsTitle">Your Personalized Itinerary</h1>
+                <button class="btn" onclick="cancelPlanning()" style="margin-bottom: 1rem;">← Start Over</button>
+                <h2 id="resultsTitle">Your Adventure</h2>
                 <p id="resultsSubtitle"></p>
+                <div class="results-actions">
+                    <button class="btn btn-primary" onclick="saveCurrentRoute()">💾 Save Route</button>
+                </div>
             </div>
 
-            <div class="view-tabs">
-                <button class="tab active" onclick="switchTab('itinerary')">📅 Itinerary</button>
-                <button class="tab" onclick="switchTab('restaurants')">🍽️ Restaurants</button>
-                <button class="tab" onclick="switchTab('tips')">💡 Tips &amp; Insights</button>
-            </div>
+            <div id="itineraryView" class="section"></div>
+            <div id="restaurantsView" class="section"></div>
+            <div id="tipsView" class="section"></div>
+        </div>
 
-            <div class="view-content active" id="itineraryView"></div>
-            <div class="view-content" id="restaurantsView"></div>
-            <div class="view-content" id="tipsView"></div>
+        <div class="profile-screen" id="profileScreen">
+            <div class="profile-container">
+                <button class="btn" onclick="closeProfile()">← Back</button>
+                <div class="profile-header">
+                    <h2>👤 My Profile</h2>
+                    <p id="profileUsername">Loading...</p>
+                </div>
+
+                <div class="profile-tabs">
+                    <button class="profile-tab active" onclick="switchProfileTab('info')">📋 Info</button>
+                    <button class="profile-tab" onclick="switchProfileTab('routes')">🗺️ Routes</button>
+                    <button class="profile-tab" onclick="switchProfileTab('favorites')">❤️ Favorites</button>
+                </div>
+
+                <div id="infoTab" class="profile-content active">
+                    <h3>Account Information</h3>
+                    <div class="profile-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalRoutes">0</div>
+                            <div class="stat-label">Routes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalFavorites">0</div>
+                            <div class="stat-label">Favorites</div>
+                        </div>
+                    </div>
+                    <p>Email: <strong id="profileEmail">-</strong></p>
+                </div>
+
+                <div id="routesTab" class="profile-content">
+                    <div id="savedRoutesContainer"><p>No routes yet.</p></div>
+                </div>
+
+                <div id="favoritesTab" class="profile-content">
+                    <div id="favoritesContainer"><p>No favorites yet.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-screen" id="adminScreen">
+            <div class="admin-container">
+                <button class="btn" onclick="closeAdmin()">← Back</button>
+                <h2>👑 Admin Dashboard</h2>
+
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('overview')">Overview</button>
+                    <button class="admin-tab" onclick="switchAdminTab('users')">Users</button>
+                    <button class="admin-tab" onclick="switchAdminTab('activity')">Activity</button>
+                </div>
+
+                <div id="overviewTab" class="admin-content active">
+                    <div class="admin-stats">
+                        <div class="admin-stat-card">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Users</p>
+                        </div>
+                        <div class="admin-stat-card">
+                            <h3 id="totalRoutesAdmin">0</h3>
+                            <p>Routes</p>
+                        </div>
+                        <div class="admin-stat-card">
+                            <h3 id="totalFavoritesAdmin">0</h3>
+                            <p>Favorites</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="usersTab" class="admin-content">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="5">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="activityTab" class="admin-content">
+                    <div id="activityContainer"><p>No activity yet.</p></div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <div class="modal-auth" id="authModal">
+        <div class="modal-content-auth">
+            <span class="close-auth" onclick="closeAuthModal()">×</span>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <div id="loginForm" class="auth-form active">
+                <h3>Sign In</h3>
+                <input type="text" id="authUsername" class="auth-input" placeholder="Username">
+                <input type="password" id="authPassword" class="auth-input" placeholder="Password">
+                <button class="auth-submit" onclick="handleLogin()">Login</button>
+            </div>
+
+            <div id="registerForm" class="auth-form">
+                <h3>Register</h3>
+                <input type="text" id="regUsername" class="auth-input" placeholder="Username">
+                <input type="email" id="regEmail" class="auth-input" placeholder="Email">
+                <input type="password" id="regPassword" class="auth-input" placeholder="Password">
+                <button class="auth-submit" onclick="handleRegister()">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingModal">
+        <div class="spinner"></div>
+        <p id="loadingText">Loading...</p>
+    </div>
+
     <script>
-        // API Configuration
+        // ==================== AUTH & CACHE MANAGER ====================
         const API_BASE_URL = 'https://ai-travelguide-81885629240.europe-west1.run.app';
+
+        const AuthManager = {
+            token: null,
+            user: null,
+
+            init() {
+                this.token = localStorage.getItem('auth_token');
+                const userData = localStorage.getItem('user_data');
+                if (userData) {
+                    try {
+                        this.user = JSON.parse(userData);
+                    } catch (e) {
+                        this.logout();
+                    }
+                }
+            },
+
+            isLoggedIn() { return !!this.token; },
+
+            async register(username, email, password) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/register`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username, email, password})
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.token = data.token;
+                        this.user = data.user;
+                        localStorage.setItem('auth_token', data.token);
+                        localStorage.setItem('user_data', JSON.stringify(data.user));
+                        return {success: true};
+                    }
+                    return {success: false, error: data.error};
+                } catch (error) {
+                    return {success: false, error: error.message};
+                }
+            },
+
+            async login(username, password) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/login`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username, password})
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.token = data.token;
+                        this.user = data.user;
+                        localStorage.setItem('auth_token', data.token);
+                        localStorage.setItem('user_data', JSON.stringify(data.user));
+                        return {success: true};
+                    }
+                    return {success: false, error: data.error};
+                } catch (error) {
+                    return {success: false, error: error.message};
+                }
+            },
+
+            logout() {
+                this.token = null;
+                this.user = null;
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+            },
+
+            getAuthHeader() {
+                return {'Authorization': `Bearer ${this.token}`};
+            }
+        };
+
+        const RouteCache = {
+            get(city, interests) {
+                const key = this.generateKey(city, interests);
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        const age = Date.now() - data.timestamp;
+                        if (age < 24 * 60 * 60 * 1000) {
+                            console.log('📦 Cache hit');
+                            return data.route;
+                        }
+                    } catch (e) {}
+                }
+                return null;
+            },
+
+            set(city, interests, routeData) {
+                const key = this.generateKey(city, interests);
+                try {
+                    localStorage.setItem(key, JSON.stringify({route: routeData, timestamp: Date.now()}));
+                } catch (e) {}
+            },
+
+            generateKey(city, interests) {
+                const sorted = [...interests].sort().join('_');
+                return `route_${city.toLowerCase()}_${sorted}`;
+            }
+        };
+
+        // ==================== UI HELPER FUNCTIONS ====================
+
+        function showLoginModal() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+            }
+        }
+
+        // ==================== AUTH FUNCTIONS ====================
+
+        async function handleLogin() {
+            const username = document.getElementById('authUsername').value;
+            const password = document.getElementById('authPassword').value;
+            if (!username || !password) { 
+                alert('Please fill all fields'); 
+                return; 
+            }
+            const result = await AuthManager.login(username, password);
+            if (result.success) {
+                alert('✅ Welcome back!');
+                document.getElementById('authModal').classList.remove('active');
+                updateAuthUI();
+            } else {
+                alert('❌ ' + result.error);
+            }
+        }
+
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            if (!username || !email || !password) { 
+                alert('Please fill all fields'); 
+                return; 
+            }
+            const result = await AuthManager.register(username, email, password);
+            if (result.success) {
+                alert('✅ Account created!');
+                document.getElementById('authModal').classList.remove('active');
+                updateAuthUI();
+            } else {
+                alert('❌ ' + result.error);
+            }
+        }
+
+        // ==================== PROFILE FUNCTIONS ====================
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('loginBtn');
+            const profileBtn = document.getElementById('profileBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const adminBtn = document.getElementById('adminBtn');
+            
+            if (AuthManager.isLoggedIn()) {
+                loginBtn.style.display = 'none';
+                profileBtn.style.display = 'block';
+                logoutBtn.style.display = 'block';
+                profileBtn.innerHTML = `👤 ${AuthManager.user.username}`;
+                
+                if (adminBtn && AuthManager.user.is_admin) {
+                    adminBtn.style.display = 'block';
+                } else if (adminBtn) {
+                    adminBtn.style.display = 'none';
+                }
+                
+                document.getElementById('connectionStatus').innerHTML = '✅ Connected';
+            } else {
+                loginBtn.style.display = 'block';
+                profileBtn.style.display = 'none';
+                logoutBtn.style.display = 'none';
+                if (adminBtn) adminBtn.style.display = 'none';
+                document.getElementById('connectionStatus').innerHTML = '🔴 Login';
+            }
+        }
+
+        function showProfile() {
+            if (!AuthManager.isLoggedIn()) {
+                showLoginModal();
+                return;
+            }
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('adminScreen').classList.remove('active');
+            document.getElementById('profileScreen').classList.add('active');
+            
+            loadProfileInfo();
+            switchProfileTab('info');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+        }
+
+        function switchProfileTab(tab) {
+            document.querySelectorAll('.profile-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'info') {
+                document.getElementById('infoTab').classList.add('active');
+                document.querySelectorAll('.profile-tab')[0].classList.add('active');
+            } else if (tab === 'routes') {
+                document.getElementById('routesTab').classList.add('active');
+                loadSavedRoutes();
+                document.querySelectorAll('.profile-tab')[1].classList.add('active');
+            } else if (tab === 'favorites') {
+                document.getElementById('favoritesTab').classList.add('active');
+                loadFavorites();
+                document.querySelectorAll('.profile-tab')[2].classList.add('active');
+            }
+        }
+
+        async function loadProfileInfo() {
+            if (!AuthManager.isLoggedIn()) return;
+            
+            document.getElementById('profileUsername').textContent = `Welcome, ${AuthManager.user.username}!`;
+            document.getElementById('profileEmail').textContent = AuthManager.user.email || '-';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.user;
+                    document.getElementById('totalRoutes').textContent = user.routes_count || 0;
+                    document.getElementById('totalFavorites').textContent = user.favorites_count || 0;
+                    
+                    const joinDate = new Date(user.created_at);
+                    document.getElementById('memberSince').textContent = joinDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        async function loadSavedRoutes() {
+            if (!AuthManager.isLoggedIn()) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/routes`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const routes = data.routes || [];
+                    const container = document.getElementById('savedRoutesContainer');
+                    
+                    if (routes.length === 0) {
+                        container.innerHTML = '<p>No saved routes yet.</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    routes.forEach(route => {
+                        const date = new Date(route.created_at).toLocaleDateString();
+                        html += `
+                            <div class="route-item">
+                                <h4>📍 ${route.route_name}</h4>
+                                <div class="route-info">
+                                    <span>🌍 ${route.city}</span>
+                                    <span>📅 ${date}</span>
+                                </div>
+                                <div class="route-actions">
+                                    <button onclick="openRoute(${route.id})">📂 Open</button>
+                                    <button onclick="deleteRoute(${route.id})" style="background: #ef4444;">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading routes:', error);
+            }
+        }
+
+        async function loadFavorites() {
+            if (!AuthManager.isLoggedIn()) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/favorites`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const favorites = data.favorites || [];
+                    const container = document.getElementById('favoritesContainer');
+                    
+                    if (favorites.length === 0) {
+                        container.innerHTML = '<p>No favorites yet.</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    favorites.forEach(fav => {
+                        html += `
+                            <div class="favorite-item">
+                                <h4>${fav.place_name}</h4>
+                                <p style="font-size: 0.9rem; opacity: 0.7;">${fav.city || 'Unknown'}</p>
+                                <button class="remove-btn" onclick="removeFavorite(${fav.id})">Remove ❌</button>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+            }
+        }
+
+        async function removeFavorite(favId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/favorites/${favId}`, {
+                    method: 'DELETE',
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    loadFavorites();
+                }
+            } catch (error) {
+                alert('Error removing favorite');
+            }
+        }
+
+        async function deleteRoute(routeId) {
+            if (!confirm('Delete this route?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/routes/${routeId}`, {
+                    method: 'DELETE',
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    alert('✅ Route deleted');
+                    loadSavedRoutes();
+                }
+            } catch (error) {
+                alert('Error deleting route');
+            }
+        }
+
+        async function openRoute(routeId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/routes`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const route = data.routes.find(r => r.id === routeId);
+                    
+                    if (route) {
+                        currentRouteData = route.route_data;
+                        document.getElementById('profileScreen').classList.remove('active');
+                        document.getElementById('resultsScreen').classList.add('active');
+                        renderResultsFromBackend(route.route_data);
+                    }
+                }
+            } catch (error) {
+                alert('Error loading route');
+            }
+        }
+
+        async function saveCurrentRoute() {
+            if (!AuthManager.isLoggedIn()) {
+                alert('Please login to save routes');
+                showLoginModal();
+                return;
+            }
+            const routeName = prompt('Enter route name:');
+            if (!routeName) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/routes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeader()
+                    },
+                    body: JSON.stringify({
+                        route_name: routeName,
+                        city: formData.destination,
+                        route_data: currentRouteData || {}
+                    })
+                });
+                if (response.ok) {
+                    alert('✅ Route saved!');
+                } else {
+                    alert('❌ Error saving route');
+                }
+            } catch (error) {
+                alert('❌ Network error');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                AuthManager.logout();
+                document.getElementById('profileScreen').classList.remove('active');
+                document.getElementById('adminScreen').classList.remove('active');
+                document.getElementById('formContainer').classList.remove('active');
+                document.getElementById('resultsScreen').classList.remove('active');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                updateAuthUI();
+            }
+        }
+
+        // ==================== ADMIN FUNCTIONS ====================
+
+        function showAdmin() {
+            if (!AuthManager.isLoggedIn()) {
+                showLoginModal();
+                return;
+            }
+
+            if (!AuthManager.user.is_admin) {
+                alert('❌ Admin access required');
+                return;
+            }
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('profileScreen').classList.remove('active');
+            document.getElementById('adminScreen').classList.add('active');
+
+            loadAdminOverview();
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+        }
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+
+            if (tab === 'overview') {
+                document.getElementById('overviewTab').classList.add('active');
+                loadAdminOverview();
+            } else if (tab === 'users') {
+                document.getElementById('usersTab').classList.add('active');
+                loadUsers();
+            } else if (tab === 'activity') {
+                document.getElementById('activityTab').classList.add('active');
+                loadActivity();
+            }
+
+            document.querySelectorAll('.admin-tab')[
+                ['overview', 'users', 'activity'].indexOf(tab)
+            ].classList.add('active');
+        }
+
+        async function loadAdminOverview() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalUsers').textContent = data.total_users || 0;
+                    document.getElementById('totalRoutesAdmin').textContent = data.total_routes || 0;
+                    document.getElementById('totalFavoritesAdmin').textContent = data.total_favorites || 0;
+                    document.getElementById('adminCount').textContent = data.admin_count || 0;
+                }
+            } catch (error) {
+                console.error('Error loading admin stats:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let html = '';
+
+                    data.users.forEach(user => {
+                        const joinDate = new Date(user.created_at).toLocaleDateString();
+                        const adminBadge = user.is_admin ? 
+                            '<span class="badge badge-admin">Admin</span>' : 
+                            '<span class="badge badge-user">User</span>';
+
+                        html += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td><strong>${user.username}</strong></td>
+                                <td>${user.email}</td>
+                                <td>${joinDate}</td>
+                                <td>${user.route_count}</td>
+                                <td>${adminBadge}</td>
+                                <td>
+                                    ${user.is_admin ? 
+                                        `<button class="action-btn demote-btn" onclick="demoteUser(${user.id})">Demote</button>` :
+                                        `<button class="action-btn promote-btn" onclick="promoteUser(${user.id})">Promote</button>`
+                                    }
+                                    <button class="action-btn delete-btn" onclick="deleteUser(${user.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    document.getElementById('usersTableBody').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = 
+                    '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error loading users</td></tr>';
+            }
+        }
+
+        async function promoteUser(userId) {
+            if (!confirm('Promote this user to admin?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/promote`, {
+                    method: 'POST',
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    alert('✅ User promoted to admin');
+                    loadUsers();
+                } else {
+                    alert('❌ Error promoting user');
+                }
+            } catch (error) {
+                alert('❌ Error promoting user');
+            }
+        }
+
+        async function demoteUser(userId) {
+            if (!confirm('Demote this user from admin?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/demote`, {
+                    method: 'POST',
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    alert('✅ User demoted');
+                    loadUsers();
+                } else {
+                    alert('❌ Error demoting user');
+                }
+            } catch (error) {
+                alert('❌ Error demoting user');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Delete this user? This action cannot be undone!')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    alert('✅ User deleted');
+                    loadUsers();
+                } else {
+                    alert('❌ Error deleting user');
+                }
+            } catch (error) {
+                alert('❌ Error deleting user');
+            }
+        }
+
+        async function loadActivity() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/activity`, {
+                    headers: AuthManager.getAuthHeader()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let html = '';
+
+                    if (data.activity.length === 0) {
+                        html = '<p style="text-align: center; opacity: 0.7;">No activity yet</p>';
+                    } else {
+                        data.activity.forEach(activity => {
+                            const date = new Date(activity.created_at).toLocaleString();
+                            let icon = '📝';
+
+                            if (activity.action === 'route_created') icon = '🗺️';
+                            if (activity.action === 'favorite_added') icon = '❤️';
+                            if (activity.action === 'user_registered') icon = '👤';
+
+                            html += `
+                                <div class="activity-item">
+                                    <h4>${icon} ${activity.username}</h4>
+                                    <p>${activity.description}</p>
+                                    <div class="activity-time">📅 ${date}</div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('activityContainer').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                document.getElementById('activityContainer').innerHTML = 
+                    '<p style="text-align: center; color: #ef4444;">Error loading activity</p>';
+            }
+        }
+
+        // ==================== TRAVEL PLANNING ====================
+
         const API_ENDPOINTS = {
             generateItinerary: '/api/generate-itinerary',
-            searchAttractions: '/api/search-attractions',
-            searchRestaurants: '/api/search-restaurants',
-            getDirections: '/api/get-directions',
-            cityTips: '/api/city-tips',
             health: '/api/health'
         };
 
-        // Application state
         let currentStep = 1;
         let currentTheme = 'light';
+        let currentRouteData = null;
         let formData = {
             destination: '',
             checkIn: '',
@@ -1328,7 +1784,6 @@ body {
             accessibility: []
         };
 
-        // Initialize theme
         function initTheme() {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             currentTheme = prefersDark ? 'dark' : 'light';
@@ -1336,7 +1791,6 @@ body {
             updateThemeButton();
         }
 
-        // Toggle theme
         function toggleTheme() {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-color-scheme', currentTheme);
@@ -1345,17 +1799,23 @@ body {
 
         function updateThemeButton() {
             const button = document.getElementById('themeToggle');
-            button.textContent = currentTheme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+            button.textContent = currentTheme === 'light' ? '🌙 Light Mode' : '☀️ Dark Mode';
         }
 
-        // Navigation functions
         function startPlanning() {
+            if (!AuthManager.isLoggedIn()) {
+                showLoginModal();
+                return;
+            }
             document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('formContainer').classList.add('active');
         }
 
         function cancelPlanning() {
             document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('profileScreen').classList.remove('active');
+            document.getElementById('adminScreen').classList.remove('active');
             document.getElementById('welcomeScreen').classList.remove('hidden');
             resetForm();
         }
@@ -1369,7 +1829,6 @@ body {
                 }
                 formData.destination = destination;
             }
-
             document.getElementById(`step${currentStep}`).classList.remove('active');
             currentStep = step;
             document.getElementById(`step${currentStep}`).classList.add('active');
@@ -1384,45 +1843,38 @@ body {
         }
 
         function updateProgress() {
-            const progress = (currentStep / 6) * 100;
+            const progress = (currentStep / 5) * 100;
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
         function resetForm() {
             currentStep = 1;
-            formData = {
-                destination: '',
-                checkIn: '',
-                checkOut: '',
-                interests: [],
-                travelStyle: '',
-                groupType: '',
-                accessibility: []
-            };
+            formData = {destination: '', checkIn: '', checkOut: '', interests: [], travelStyle: '', groupType: '', accessibility: []};
             document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
             document.getElementById('step1').classList.add('active');
             updateProgress();
         }
 
-        // Generate itinerary
         async function generateItinerary() {
             formData.checkIn = document.getElementById('checkIn').value;
             formData.checkOut = document.getElementById('checkOut').value;
-            
-            formData.interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
-                .map(cb => cb.value);
-            
+            formData.interests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(cb => cb.value);
             const travelStyleInput = document.querySelector('input[name="travelStyle"]:checked');
             formData.travelStyle = travelStyleInput ? travelStyleInput.value : 'cultural';
-            
             const groupTypeInput = document.querySelector('input[name="groupType"]:checked');
             formData.groupType = groupTypeInput ? groupTypeInput.value : 'solo';
-            
-            formData.accessibility = Array.from(document.querySelectorAll('input[name="accessibility"]:checked'))
-                .map(cb => cb.value);
+
+            const cached = RouteCache.get(formData.destination, formData.interests);
+            if (cached && AuthManager.isLoggedIn()) {
+                console.log('📦 Using cached route');
+                currentRouteData = cached;
+                renderResultsFromBackend(cached);
+                document.getElementById('formContainer').classList.remove('active');
+                document.getElementById('resultsScreen').classList.add('active');
+                return;
+            }
 
             showLoading('Fetching real data from Google Places API...');
-
             try {
                 const requestData = {
                     city: formData.destination,
@@ -1431,386 +1883,226 @@ body {
                     interests: formData.interests,
                     travel_style: formData.travelStyle,
                     group_type: formData.groupType,
-                    accessibility_needs: formData.accessibility
+                    accessibility_needs: []
                 };
 
                 const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.generateItinerary}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(requestData)
                 });
 
                 hideLoading();
-
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
                 const data = await response.json();
-
-                document.getElementById('formContainer').classList.remove('active');
-                document.getElementById('resultsScreen').classList.add('active');
+                currentRouteData = data;
+                RouteCache.set(formData.destination, formData.interests, data);
 
                 renderResultsFromBackend(data);
-
-            } catch (error) {
-                console.error('Error generating itinerary:', error);
-                hideLoading();
-                
                 document.getElementById('formContainer').classList.remove('active');
                 document.getElementById('resultsScreen').classList.add('active');
-                
-                showError(`Error: ${error.message}`);
+
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                showError('Cannot connect to server. Make sure Flask is running on http://localhost:5000');
             }
         }
 
-        // Render results from backend data
         function renderResultsFromBackend(data) {
             const destination = data.city || formData.destination;
-            const tripDays = data.duration_days || data.itinerary.length;
-
+            const tripDays = data.duration_days || (data.itinerary ? data.itinerary.length : 0);
             document.getElementById('resultsTitle').textContent = `Your ${destination} Adventure`;
-            const dateRange = formData.checkIn && formData.checkOut 
-                ? `${formatDate(formData.checkIn)} - ${formatDate(formData.checkOut)}`
-                : `${tripDays} day trip`;
+            const dateRange = formData.checkIn && formData.checkOut ? `${formatDate(formData.checkIn)} - ${formatDate(formData.checkOut)}` : `${tripDays} day trip`;
             document.getElementById('resultsSubtitle').textContent = dateRange;
-
-            renderItineraryFromBackend(data.itinerary);
-            renderRestaurantsFromBackend(data.itinerary);
+            renderItineraryFromBackend(data.itinerary || []);
+            renderRestaurantsFromBackend(data.itinerary || []);
             renderTipsFromBackend(data.tips || []);
         }
 
-        // Render itinerary from backend data
         function renderItineraryFromBackend(itinerary) {
             const container = document.getElementById('itineraryView');
-            
-            if (!itinerary || itinerary.length === 0) {
+            if (!itinerary || !itinerary.length) {
                 container.innerHTML = '<p>No itinerary data available.</p>';
                 return;
             }
 
             let html = '';
-
-            itinerary.forEach((day, dayIdx) => {
-                const dayNum = day.day || (dayIdx + 1);
-                const dateStr = day.date || `Day ${dayNum}`;
-
-                html += `
-                    <div class="day-card">
-                        <div class="day-header" onclick="toggleDay(${dayNum})">
-                            <h3>${dateStr}</h3>
-                            <span id="dayToggle${dayNum}">▼</span>
-                        </div>
-                        <div class="day-content" id="dayContent${dayNum}">
-                `;
-
+            
+            itinerary.forEach(day => {
                 if (day.activities && day.activities.length > 0) {
                     day.activities.forEach(activity => {
-                        html += renderActivityCard(activity);
-                    });
-                }
-
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        // Render single activity card with real data
-        function renderActivityCard(activity) {
-            let html = '<div class="activity-card">';
-            
-            html += `
-                <div class="activity-header">
-                    <div>
-                        <div class="activity-title">${activity.name}</div>
-                        ${activity.category ? `<span class="activity-category">${activity.category}</span>` : ''}
-                    </div>
-                </div>
-            `;
-            
-            if (activity.description) {
-                html += `<p class="activity-description">${activity.description}</p>`;
-            }
-            
-            html += '<div class="activity-meta">';
-            if (activity.address) {
-                html += `<div class="activity-meta-item">📍 ${activity.address}</div>`;
-            }
-            if (activity.duration) {
-                html += `<div class="activity-meta-item">⏱️ ${activity.duration}</div>`;
-            }
-            if (activity.rating) {
-                html += `<div class="activity-meta-item"><span class="rating">⭐ ${activity.rating}</span></div>`;
-            }
-            html += '</div>';
-            
-            if (activity.phone || activity.website) {
-                html += '<div class="contact-info">';
-                if (activity.phone) {
-                    html += `<a href="tel:${activity.phone}">📞 ${activity.phone}</a>`;
-                }
-                if (activity.website) {
-                    html += `<a href="${activity.website}" target="_blank">🌐 Website</a>`;
-                }
-                html += '</div>';
-            }
-            
-            if (activity.opening_hours && activity.opening_hours.length > 0) {
-                html += '<div class="opening-hours"><strong>⏰ Opening Hours:</strong><ul class="hours-list">';
-                activity.opening_hours.slice(0, 7).forEach(hours => {
-                    html += `<li>${hours}</li>`;
-                });
-                html += '</ul></div>';
-            }
-            
-            if (activity.reviews && activity.reviews.length > 0) {
-                html += '<div class="reviews-section"><strong>💬 Reviews:</strong>';
-                activity.reviews.slice(0, 3).forEach(review => {
-                    html += `
-                        <div class="review-item">
-                            <div class="review-header">
-                                <span class="review-author">${review.author || 'Anonymous'}</span>
-                                <span class="review-rating">⭐ ${review.rating || 'N/A'}</span>
-                            </div>
-                            <p class="review-text">${review.text || ''}</p>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            html += '</div>';
-            return html;
-        }
-
-        // Render restaurants from backend data
-        function renderRestaurantsFromBackend(itinerary) {
-            const container = document.getElementById('restaurantsView');
-            let allRestaurants = [];
-            
-            if (itinerary) {
-                itinerary.forEach(day => {
-                    if (day.restaurants && day.restaurants.length > 0) {
-                        allRestaurants = allRestaurants.concat(day.restaurants);
-                    }
-                });
-            }
-            
-            if (allRestaurants.length === 0) {
-                container.innerHTML = '<p>No restaurant recommendations available.</p>';
-                return;
-            }
-
-            let html = '<h2 style="margin-bottom: 24px;">Recommended Restaurants</h2>';
-
-            allRestaurants.forEach(restaurant => {
-                html += `<div class="restaurant-card">`;
-                
-                html += `
-                    <div class="restaurant-header">
-                        <div>
-                            <h3 class="restaurant-name">🍽️ ${restaurant.name}</h3>
-                        </div>
-                    </div>
-                    <div class="restaurant-info">
-                        ${restaurant.address ? `<div>📍 ${restaurant.address}</div>` : ''}
-                        ${restaurant.rating ? `<div class="rating">⭐ ${restaurant.rating}</div>` : ''}
-                    </div>
-                `;
-                
-                if (restaurant.phone || restaurant.website) {
-                    html += '<div class="contact-info">';
-                    if (restaurant.phone) {
-                        html += `<a href="tel:${restaurant.phone}">📞 ${restaurant.phone}</a>`;
-                    }
-                    if (restaurant.website) {
-                        html += `<a href="${restaurant.website}" target="_blank">🌐 Website</a>`;
-                    }
-                    html += '</div>';
-                }
-                
-                if (restaurant.opening_hours && restaurant.opening_hours.length > 0) {
-                    html += '<div class="opening-hours"><strong>⏰ Opening Hours:</strong><ul class="hours-list">';
-                    restaurant.opening_hours.slice(0, 7).forEach(hours => {
-                        html += `<li>${hours}</li>`;
-                    });
-                    html += '</ul></div>';
-                }
-                
-                if (restaurant.reviews && restaurant.reviews.length > 0) {
-                    html += '<div class="reviews-section"><strong>💬 Reviews:</strong>';
-                    restaurant.reviews.slice(0, 3).forEach(review => {
+                        const openHours = activity.opening_hours && activity.opening_hours.length > 0 ? activity.opening_hours[0] : 'Hours not available';
+                        const hasPhotos = activity.photos && activity.photos.length > 0;
+                        
                         html += `
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <span class="review-author">${review.author || 'Anonymous'}</span>
-                                    <span class="review-rating">⭐ ${review.rating || 'N/A'}</span>
+                            <div class="attraction-card">
+                                <div class="attraction-title">
+                                    <h3>${activity.name}</h3>
+                                    <div class="attraction-category">${activity.category || 'Sightseeing'}</div>
                                 </div>
-                                <p class="review-text">${review.text || ''}</p>
+                                
+                                <p class="attraction-description">${activity.description || 'Popular attraction'}</p>
+                                
+                                <div class="attraction-info">
+                                    <div class="info-row">
+                                        <span class="info-label">📍 Location</span>
+                                        <span class="info-value">${activity.address || activity.location || 'Address not available'}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">⭐ Rating</span>
+                                        <span class="info-value">${activity.rating || 'N/A'}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">📞 Phone</span>
+                                        <span class="info-value">${activity.phone || 'N/A'}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">🌐 Website</span>
+                                        ${activity.website && activity.website !== 'N/A' ? 
+                                            `<a href="${activity.website}" target="_blank" class="info-link">Website</a>` : 
+                                            '<span class="info-value">N/A</span>'
+                                        }
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">🕐 Hours</span>
+                                        <span class="info-value">${openHours}</span>
+                                    </div>
+                                </div>
+
+                                ${hasPhotos ? `
+                                    <div class="attraction-gallery">
+                                        ${activity.photos.slice(0, 3).map(photo => 
+                                            `<img src="${photo}" alt="${activity.name}" class="gallery-image" style="cursor: pointer;">`
+                                        ).join('')}
+                                    </div>
+                                ` : ''}
+
+                                ${activity.reviews && activity.reviews.length > 0 ? `
+                                    <div class="attraction-reviews">
+                                        <h4>Reviews:</h4>
+                                        ${activity.reviews.slice(0, 2).map(review => `
+                                            <div class="review-item">
+                                                <strong>${review.author}</strong>
+                                                <div class="review-rating">⭐ ${review.rating}</div>
+                                                <p>${review.text}</p>
+                                                <div class="review-time">${review.time}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
                             </div>
                         `;
                     });
-                    html += '</div>';
                 }
-                
-                html += '</div>';
             });
 
-            container.innerHTML = html;
+            container.innerHTML = html || '<p>No activities found.</p>';
         }
 
-        // Render tips from backend data
-        function renderTipsFromBackend(tips) {
-            const container = document.getElementById('tipsView');
-            
-            if (!tips || tips.length === 0) {
-                container.innerHTML = '<p>No tips available.</p>';
+        function renderRestaurantsFromBackend(itinerary) {
+            const container = document.getElementById('restaurantsView');
+            const restaurants = [];
+            itinerary.forEach(day => {
+                day.restaurants?.forEach(restaurant => {
+                    restaurants.push(restaurant);
+                });
+            });
+
+            if (restaurants.length === 0) {
+                container.innerHTML = '';
                 return;
             }
 
-            let html = '<h2 style="margin-bottom: 24px;">Tips &amp; Local Insights</h2><div class="tips-grid">';
-
-            const icons = ['💡', '🎯', '⚠️', '🌟', '📌', '🔔', '✨', '💰'];
-
-            tips.forEach((tip, idx) => {
-                const icon = icons[idx % icons.length];
-                const tipText = typeof tip === 'string' ? tip : (tip.text || tip.tip || '');
+            let html = '<h2>🍽️ Restaurants</h2>';
+            restaurants.forEach(restaurant => {
+                const hasPhotos = restaurant.photos && restaurant.photos.length > 0;
+                
                 html += `
-                    <div class="tip-card">
-                        <div class="tip-icon">${icon}</div>
-                        <div class="tip-content">${tipText}</div>
+                    <div class="attraction-card restaurant-card">
+                        <div class="attraction-title">
+                            <h3>${restaurant.name}</h3>
+                            <div class="attraction-category">Restaurant</div>
+                        </div>
+                        
+                        <div class="attraction-info">
+                            <div class="info-row">
+                                <span class="info-label">💵 Price</span>
+                                <span class="info-value">${restaurant.price || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">⭐ Rating</span>
+                                <span class="info-value">${restaurant.rating || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">📍 Address</span>
+                                <span class="info-value">${restaurant.address || 'Address not available'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">📞 Phone</span>
+                                <span class="info-value">${restaurant.phone || 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        ${hasPhotos ? `
+                            <div class="attraction-gallery">
+                                ${restaurant.photos.slice(0, 2).map(photo => 
+                                    `<img src="${photo}" alt="${restaurant.name}" class="gallery-image" style="cursor: pointer;">`
+                                ).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             });
+            
+            container.innerHTML = html;
+        }
 
+        function renderTipsFromBackend(tips) {
+            const container = document.getElementById('tipsView');
+            if (!tips || tips.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            let html = '<h2>💡 Tips</h2><div style="display: grid; gap: 1rem;">';
+            tips.forEach(tip => { 
+                html += `<div style="background: var(--bg); padding: 1rem; border-left: 4px solid var(--primary); border-radius: 4px;">${tip}</div>`; 
+            });
             html += '</div>';
             container.innerHTML = html;
         }
 
-        // Toggle day content
-        function toggleDay(day) {
-            const content = document.getElementById(`dayContent${day}`);
-            const toggle = document.getElementById(`dayToggle${day}`);
-            
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                toggle.textContent = '▼';
-            } else {
-                content.classList.add('collapsed');
-                toggle.textContent = '▶';
-            }
-        }
-
-        // Switch tabs
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-
-            document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
-            
-            if (tabName === 'itinerary') {
-                document.getElementById('itineraryView').classList.add('active');
-            } else if (tabName === 'restaurants') {
-                document.getElementById('restaurantsView').classList.add('active');
-            } else if (tabName === 'tips') {
-                document.getElementById('tipsView').classList.add('active');
-            }
-        }
-
-        // Start over
-        function startOver() {
-            document.getElementById('resultsScreen').classList.remove('active');
-            document.getElementById('welcomeScreen').classList.remove('hidden');
-            resetForm();
-        }
-
-        // Utility functions
         function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            const options = { month: 'short', day: 'numeric', year: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
         }
 
-        // Add visual feedback for checkboxes and radios
-        document.addEventListener('change', function(e) {
-            if (e.target.type === 'checkbox') {
-                const parent = e.target.closest('.checkbox-item');
-                if (parent) {
-                    if (e.target.checked) {
-                        parent.classList.add('selected');
-                    } else {
-                        parent.classList.remove('selected');
-                    }
-                }
+        function showLoading(message) {
+            const loader = document.getElementById('loadingModal');
+            if (loader) {
+                loader.querySelector('p').textContent = message;
+                loader.classList.add('active');
             }
-            
-            if (e.target.type === 'radio') {
-                const parent = e.target.closest('.radio-grid');
-                if (parent) {
-                    parent.querySelectorAll('.radio-item').forEach(item => item.classList.remove('selected'));
-                    e.target.closest('.radio-item').classList.add('selected');
-                }
-            }
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('loadingModal');
+            if (loader) loader.classList.remove('active');
+        }
+
+        function showError(message) {
+            alert('❌ ' + message);
+        }
+
+        // ==================== INITIALIZE ====================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            AuthManager.init();
+            updateAuthUI();
+            initTheme();
         });
 
-        // Check backend connection
-        async function checkBackendConnection() {
-            try {
-                const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.health}`);
-                
-                if (response.ok) {
-                    const statusEl = document.getElementById('connectionStatus');
-                    statusEl.textContent = '🟢 Connected';
-                    return true;
-                }
-            } catch (error) {
-                console.error('Backend connection failed:', error);
-                const statusEl = document.getElementById('connectionStatus');
-                statusEl.textContent = '🔴 Disconnected';
-                return false;
-            }
-            return false;
-        }
-
-        // Show loading screen
-        function showLoading(message = 'Fetching real data from Google Places API...') {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const loadingText = document.getElementById('loadingText');
-            loadingText.textContent = message;
-            loadingScreen.classList.add('active');
-        }
-
-        // Hide loading screen
-        function hideLoading() {
-            const loadingScreen = document.getElementById('loadingScreen');
-            loadingScreen.classList.remove('active');
-        }
-
-        // Show error message
-        function showError(message) {
-            const errorHTML = `
-                <div class="error-message">
-                    <h3>⚠️ Error</h3>
-                    <p>${message}</p>
-                    <button class="btn-primary" onclick="startOver()">Start Over</button>
-                </div>
-            `;
-            
-            document.getElementById('itineraryView').innerHTML = errorHTML;
-        }
-
-        // Initialize on load
-        initTheme();
-        checkBackendConnection();
-
-        // Check connection every 30 seconds
-        setInterval(checkBackendConnection, 30000);
     </script>
 </body>
 </html>
