@@ -520,6 +520,165 @@ def get_stats(current_user_id):
         logger.error(f"Get stats error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+# ==================== ROUTES ENDPOINTS ====================
+
+@app.route('/api/routes', methods=['GET'])
+@token_required
+def get_saved_routes(current_user_id):
+    """Get user's saved routes"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, route_name, city, route_data, created_at 
+                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''',
+                  (current_user_id,))
+        routes = c.fetchall()
+        conn.close()
+
+        routes_list = []
+        for route in routes:
+            routes_list.append({
+                'id': route[0],
+                'route_name': route[1],
+                'city': route[2],
+                'route_data': json.loads(route[3]),
+                'created_at': route[4]
+            })
+
+        return jsonify({'routes': routes_list}), 200
+
+    except Exception as e:
+        logger.error(f"Get routes error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/routes', methods=['POST'])
+@token_required
+def save_route(current_user_id):
+    """Save a new route"""
+    try:
+        data = request.json
+        route_name = data.get('route_name')
+        city = data.get('city')
+        route_data = data.get('route_data')
+
+        if not route_name or not city or not route_data:
+            return jsonify({'error': 'All fields are required'}), 400
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO saved_routes (user_id, route_name, city, route_data) 
+                     VALUES (?, ?, ?, ?)''',
+                  (current_user_id, route_name, city, json.dumps(route_data)))
+        conn.commit()
+        route_id = c.lastrowid
+        conn.close()
+
+        return jsonify({
+            'message': 'Route saved successfully',
+            'route_id': route_id
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Save route error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/routes/<int:route_id>', methods=['DELETE'])
+@token_required
+def delete_route(current_user_id, route_id):
+    """Delete a saved route"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('DELETE FROM saved_routes WHERE id = ? AND user_id = ?', (route_id, current_user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Route deleted successfully'}), 200
+
+    except Exception as e:
+        logger.error(f"Delete route error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== FAVORITES ENDPOINTS ====================
+
+@app.route('/api/favorites', methods=['GET'])
+@token_required
+def get_favorites(current_user_id):
+    """Get user's favorite places"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, place_id, place_name, city, created_at 
+                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''',
+                  (current_user_id,))
+        favorites = c.fetchall()
+        conn.close()
+
+        favorites_list = []
+        for fav in favorites:
+            favorites_list.append({
+                'id': fav[0],
+                'place_id': fav[1],
+                'place_name': fav[2],
+                'city': fav[3],
+                'created_at': fav[4]
+            })
+
+        return jsonify({'favorites': favorites_list}), 200
+
+    except Exception as e:
+        logger.error(f"Get favorites error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/favorites', methods=['POST'])
+@token_required
+def add_favorite(current_user_id):
+    """Add place to favorites"""
+    try:
+        data = request.json
+        place_id = data.get('place_id')
+        place_name = data.get('place_name')
+        city = data.get('city')
+
+        if not place_id or not place_name or not city:
+            return jsonify({'error': 'All fields are required'}), 400
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO favorites (user_id, place_id, place_name, city) 
+                     VALUES (?, ?, ?, ?)''',
+                  (current_user_id, place_id, place_name, city))
+        conn.commit()
+        fav_id = c.lastrowid
+        conn.close()
+
+        return jsonify({
+            'message': 'Added to favorites',
+            'favorite_id': fav_id
+        }), 201
+
+    except Exception as e:
+        logger.error(f"Add favorite error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/favorites/<int:fav_id>', methods=['DELETE'])
+@token_required
+def delete_favorite(current_user_id, fav_id):
+    """Remove from favorites"""
+    try:
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('DELETE FROM favorites WHERE id = ? AND user_id = ?', (fav_id, current_user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Removed from favorites'}), 200
+
+    except Exception as e:
+        logger.error(f"Delete favorite error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
 # ==================== TRAVEL API ====================
 
 @app.route('/', methods=['GET'])
