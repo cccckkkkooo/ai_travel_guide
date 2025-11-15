@@ -6,10 +6,12 @@ from flask_cors import CORS
 import googlemaps
 import logging
 import requests
-from datetime import datetime
-import hashlib
-import base64
-
+from datetime import datetime, timedelta
+import sqlite3
+import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import json
 
 # Load environment variables
 print("📂 Loading configuration from .env...")
@@ -53,6 +55,7 @@ CORS(app, resources={
     }
 })
 
+
 try:
     gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
     print("✅ Google Maps client initialized\n")
@@ -63,27 +66,49 @@ except Exception as e:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ==================== DATABASE SIMULATION ====================
-# In production, use a real database (SQLite, PostgreSQL, etc.)
+# ==================== DATABASE SETUP ====================
+def init_db():
+    """Initialize SQLite database"""
+    conn = sqlite3.connect('travelguide.db')
+    c = conn.cursor()
 
-users_db = {}
-routes_db = {}
-favorites_db = {}
+    # Users table
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
 
-def generate_simple_token(user_id):
-    """Generate a simple token (not JWT, just base64 encoded)"""
-    token_data = f"{user_id}:{datetime.now().isoformat()}"
-    return base64.b64encode(token_data.encode()).decode()
+    # Saved routes table
+    c.execute('''CREATE TABLE IF NOT EXISTS saved_routes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        route_name TEXT NOT NULL,
+        city TEXT NOT NULL,
+        route_data TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
 
-def verify_token(token):
-    """Verify token and extract user_id"""
-    try:
-        token_data = base64.b64decode(token).decode()
-        user_id = token_data.split(':')[0]
-        return user_id
-    except:
-        return None
+    # Favorites table
+    c.execute('''CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        place_id TEXT NOT NULL,
+        place_name TEXT NOT NULL,
+        city TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
 
+    conn.commit()
+    conn.close()
+    print("✅ Database initialized\n")
+
+init_db()
 
 # ==================== AUTH DECORATORS ====================
 def token_required(f):
@@ -280,8 +305,7 @@ def register():
                 'user': {
                     'id': user_id,
                     'username': username,
-                    'email': email,
-                    'is_admin': 0
+                    'email': email
                 }
             }), 201
         except sqlite3.IntegrityError:
@@ -381,7 +405,7 @@ def get_saved_routes(current_user_id):
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
         c.execute('''SELECT id, route_name, city, route_data, created_at 
-                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''',
+                     FROM saved_routes WHERE user_id = ? ORDER BY created_at DESC''', 
                   (current_user_id,))
         routes = c.fetchall()
         conn.close()
@@ -459,7 +483,7 @@ def get_favorites(current_user_id):
         conn = sqlite3.connect('travelguide.db')
         c = conn.cursor()
         c.execute('''SELECT id, place_id, place_name, city, created_at 
-                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''',
+                     FROM favorites WHERE user_id = ? ORDER BY created_at DESC''', 
                   (current_user_id,))
         favorites = c.fetchall()
         conn.close()
@@ -529,57 +553,15 @@ def delete_favorite(current_user_id, fav_id):
         return jsonify({'error': str(e)}), 500
 
 # ==================== ADMIN ENDPOINTS ====================
-@app.route('/api/admin/stats', methods=['GET'])
-@token_required
-@admin_required
-def get_admin_stats(current_user_id):
-    """Get admin dashboard statistics"""
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
-    try:
-        c.execute('SELECT COUNT(*) FROM users')
-        total_users = c.fetchone()[0]
-
-        c.execute('SELECT COUNT(*) FROM saved_routes')
-        total_routes = c.fetchone()[0]
-
-        c.execute('SELECT COUNT(*) FROM favorites')
-        total_favorites = c.fetchone()[0]
-
-        c.execute('SELECT COUNT(*) FROM users WHERE is_admin = 1')
-        admin_count = c.fetchone()[0]
-
-        conn.close()
-
-        return jsonify({
-            'total_users': total_users,
-            'total_routes': total_routes,
-            'total_favorites': total_favorites,
-            'admin_count': admin_count
-        }), 200
-    except Exception as e:
-        conn.close()
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/admin/users', methods=['GET'])
 @token_required
 @admin_required
 def get_all_users(current_user_id):
-    """Get all users with their statistics"""
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
+    """Get all users (admin only)"""
     try:
-        c.execute('''
-            SELECT u.id, u.username, u.email, u.created_at, u.is_admin, 
-                   COUNT(sr.id) as route_count
-            FROM users u
-            LEFT JOIN saved_routes sr ON u.id = sr.user_id
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-        ''')
-
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
+        c.execute('''SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at DESC''')
         users = c.fetchall()
         conn.close()
 
@@ -589,109 +571,67 @@ def get_all_users(current_user_id):
                 'id': user[0],
                 'username': user[1],
                 'email': user[2],
-                'created_at': user[3],
-                'is_admin': user[4],
-                'route_count': user[5]
+                'is_admin': user[3],
+                'created_at': user[4]
             })
 
         return jsonify({'users': users_list}), 200
+
     except Exception as e:
-        conn.close()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/admin/users/<int:user_id>/promote', methods=['POST'])
-@token_required
-@admin_required
-def promote_user(current_user_id, user_id):
-    """Promote user to admin"""
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
-    try:
-        c.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'User promoted to admin'}), 200
-    except Exception as e:
-        conn.close()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/admin/users/<int:user_id>/demote', methods=['POST'])
-@token_required
-@admin_required
-def demote_user(current_user_id, user_id):
-    """Demote user from admin"""
-    if user_id == current_user_id:
-        return jsonify({'error': 'Cannot demote yourself'}), 400
-
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
-    try:
-        c.execute('UPDATE users SET is_admin = 0 WHERE id = ?', (user_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'User demoted'}), 200
-    except Exception as e:
-        conn.close()
+        logger.error(f"Get users error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
 @token_required
 @admin_required
-def delete_user_admin(current_user_id, user_id):
-    """Delete a user and their data"""
-    if user_id == current_user_id:
-        return jsonify({'error': 'Cannot delete yourself'}), 400
-
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
+def delete_user(current_user_id, user_id):
+    """Delete user (admin only)"""
     try:
+        if current_user_id == user_id:
+            return jsonify({'error': 'Cannot delete yourself'}), 400
+
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
         c.execute('DELETE FROM saved_routes WHERE user_id = ?', (user_id,))
         c.execute('DELETE FROM favorites WHERE user_id = ?', (user_id,))
         c.execute('DELETE FROM users WHERE id = ?', (user_id,))
         conn.commit()
         conn.close()
+
         return jsonify({'message': 'User deleted successfully'}), 200
+
     except Exception as e:
-        conn.close()
+        logger.error(f"Delete user error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/admin/activity', methods=['GET'])
+@app.route('/api/admin/stats', methods=['GET'])
 @token_required
 @admin_required
-def get_activity(current_user_id):
-    """Get recent user activity"""
-    conn = sqlite3.connect('travelguide.db')
-    c = conn.cursor()
-
+def get_stats(current_user_id):
+    """Get platform statistics (admin only)"""
     try:
-        c.execute('''
-            SELECT u.username, 'route_created' as action, 
-                   'Created route: ' || sr.route_name || ' in ' || sr.city as description,
-                   sr.created_at
-            FROM saved_routes sr
-            JOIN users u ON sr.user_id = u.id
-            ORDER BY sr.created_at DESC
-            LIMIT 20
-        ''')
+        conn = sqlite3.connect('travelguide.db')
+        c = conn.cursor()
 
-        activities = c.fetchall()
+        c.execute('SELECT COUNT(*) FROM users')
+        total_users = c.fetchone()[0]
+
+        c.execute('SELECT COUNT(*) FROM saved_routes')
+        total_routes = c.fetchone()[0]
+
+        c.execute('SELECT COUNT(*) FROM favorites')
+        total_favorites = c.fetchone()[0]
+
         conn.close()
 
-        activity_list = []
-        for activity in activities:
-            activity_list.append({
-                'username': activity[0],
-                'action': activity[1],
-                'description': activity[2],
-                'created_at': activity[3]
-            })
+        return jsonify({
+            'total_users': total_users,
+            'total_routes': total_routes,
+            'total_favorites': total_favorites
+        }), 200
 
-        return jsonify({'activity': activity_list}), 200
     except Exception as e:
-        conn.close()
+        logger.error(f"Get stats error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # ==================== TRAVEL API ENDPOINTS ====================
@@ -726,7 +666,7 @@ def generate_itinerary():
         city = data.get('city')
         start_date = data.get('start_date')
         end_date = data.get('end_date')
-        interests = data.get('interests', [])
+        interests = data.get('interests', [])  # NOW WE USE THIS!
 
         if not city:
             return jsonify({'error': 'City is required'}), 400
@@ -765,7 +705,7 @@ def generate_itinerary():
                     base_queries.append(f'{query_type} in {city}')
 
         # Search places
-        for query in base_queries[:5]:
+        for query in base_queries[:5]:  # Limit to 5 queries
             places = text_search_places(query, location)
             for place in places:
                 place_id = place['place_id']
@@ -775,6 +715,7 @@ def generate_itinerary():
 
                 details = get_place_details(place_id)
                 if details:
+                    # Categorize based on types
                     category = 'Sightseeing'
                     types = details.get('types', [])
 
