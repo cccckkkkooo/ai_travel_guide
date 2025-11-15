@@ -793,6 +793,16 @@ def not_found(error):
 def server_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/admin/activity', methods=['GET'])
+@token_required
+@admin_required
+def get_activity(current_user_id):
+    """Get platform activity (admin only)"""
+    return jsonify({
+        'activity': [],
+        'message': 'No activity yet'
+    }), 200
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
     app.run(debug=False, host='0.0.0.0', port=port)
